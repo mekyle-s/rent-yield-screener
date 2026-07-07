@@ -10,7 +10,8 @@
     "check": "astro check",
     "test": "vitest run",
     "etl": "tsx scripts/etl/run.ts",
-    "etl:fetch": "tsx scripts/etl/fetch.ts"
+    "etl:fetch": "tsx scripts/etl/fetch.ts",
+    "etl:validate": "tsx scripts/etl/validate.ts"
   },
   "dependencies": {
     "astro": "^7.0.6"
