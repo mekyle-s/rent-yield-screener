@@ -8,13 +8,15 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "test": "vitest run"
+    "test": "vitest run",
+    "etl:fetch": "tsx scripts/etl/fetch.ts"
   },
   "dependencies": {
     "astro": "^7.0.6"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "tsx": "^4.23.0",
     "typescript": "^5.6.0",
     "vitest": "^3.0.0"
   }
