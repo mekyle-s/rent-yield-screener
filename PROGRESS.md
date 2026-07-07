@@ -5,16 +5,16 @@
 # Progress — Rent-Yield Screener
 
 ## Active task
-A.1 — Astro scaffold + repo hygiene
+A.2 — CI pipeline green on push (workflow file committed; needs GitHub remote)
 
 ## Status
-in-progress — repo initialized, docs authored; scaffold next
+A.1 DONE — evidence: `npm test` → 1 passed · `npm run build` → dist/index.html · `npm run check` → 0 errors
 
 ## Last action & result
-2026-07-07: product repo created; 7-doc set authored from HQ templates (constitution v1.0.0 incl. both ratification riders).
+2026-07-07: Astro skeleton hand-rolled (package.json, config, index page, smoke test, .gitattributes LF-enforcement, CI workflow incl. attribution-compliance gate). All A.1 ACs pass locally.
 
 ## Next action
-Scaffold Astro (minimal template), placeholder test, `npm run build` green.
+Mekyle creates GitHub remote (gh CLI not installed) → push → verify green Actions run (A.2 AC) → connect Cloudflare Pages (A.3).
 
 ## Learnings / guardrails
 - ETL determinism is constitutional (VI): always compare double-run outputs with `diff -r` before claiming done.

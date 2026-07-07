@@ -1,0 +1,4 @@
+# ETL output must be byte-identical cross-platform (constitution VI) — force LF everywhere.
+* text=auto eol=lf
+*.png binary
+*.pmtiles binary

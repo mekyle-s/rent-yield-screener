@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run check
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Attribution compliance (constitution V)
+        # No data pages exist yet in the skeleton; guard activates as soon as metro pages ship.
+        run: |
+          if ls dist/metro/*.html >/dev/null 2>&1; then
+            MISSING=$(grep -L "Data Provided by Zillow Group" dist/metro/*.html || true)
+            if [ -n "$MISSING" ]; then
+              echo "::error::Pages missing Zillow attribution:"; echo "$MISSING"; exit 1
+            fi
+          fi
