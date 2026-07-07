@@ -5,16 +5,16 @@
 # Progress — Rent-Yield Screener
 
 ## Active task
-Pre-Phase-B gate: reference-repo mining → V1 blueprint consolidation → architecture review → Mekyle checkpoint
+B.1 — Fetch + freeze fixture snapshots (NOT STARTED — Phase B begins next session)
 
 ## Status
-**PHASE A EXIT ✅** — A.1/A.2/A.3 all green. Evidence: curl https://rent-yield-screener.pages.dev → 200; CI run 28844570893 success.
+**PHASE 2 PACKAGE APPROVED 2026-07-07 (third presentation, evidence-served).** Phase A exit ✅ (site live, CI green). Architecture gate ✅ (ADR-0004 accepted, all docs Sync-amended). AC audit ✅ (B.3/D.2 rewritten executable). Security ✅ (Astro 7.0.6, 0 vulns, CI run 28846609676 green).
 
 ## Last action & result
-2026-07-07: Cloudflare Pages connected by Mekyle; live URL verified; `site` set in astro.config.
+2026-07-07 (night): Mekyle approved Phase 2 package. Build intentionally NOT started — stopped for the night at his instruction.
 
 ## Next action
-Mine the 3 shortlisted reference repos (PMTiles serverless pattern, astro-paper SEO conventions, ETL-on-Zillow transforms) → consolidate blueprint → adversarial critique + simplicity review → checkpoint → Phase B build.
+**Phase B starts tomorrow morning at Rung 1 (watched execution).** First move: B.1 — fetch 4 Zillow CSVs, trim to fixtures (must include edge cases: SizeRank-0 national row, leading-zero ZIPs, ZHVI-only regions, blank trailing months). ACs: `npm run etl:fetch -- --dry-run` lists 4 URLs exit 0; `ls tests/fixtures/*.csv | wc -l` → 4. Test-first per ADR-0003.
 
 ## Learnings / guardrails
 - ETL determinism is constitutional (VI): always compare double-run outputs with `diff -r` before claiming done.
