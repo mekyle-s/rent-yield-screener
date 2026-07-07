@@ -27,11 +27,12 @@
 - [ ] **Task B.2 — Transform: CSV → canonical P2R latest.json** (melt wide→long, inner join on RegionID, per-region shared latest non-null month, ratio = ZHVI/(ZORI×12); array-of-records sorted by RegionID, no Date construction, no locale formatting — ADR-0004 determinism rules)
   - AC: `npm test -- transform` → all pass (incl. edge cases: missing rent, missing value, div-by-zero, leading-zero ZIPs, metro-vs-ZIP column counts)
   - AC (golden snapshot, gate critique #2): `npm run etl -- --input tests/fixtures --out /tmp/out && diff -r /tmp/out tests/golden/` → no output — CI regenerates and diffs the COMMITTED golden snapshot (cross-platform byte-identity, constitution VI)
+  - AC (CI proof): `gh run watch $(gh run list --limit 1 --json databaseId -q ".[0].databaseId") --exit-status` → exits 0 on the push that adds the golden-diff step (same pattern as D.2)
 - [ ] **Task B.3 — Fetch-integrity + validation gate** (HTTP 200 + CSV content-type + expected header row + non-empty BEFORE parse; schema check; row-count sanity; ratio-range sanity; outer-join audit counts)
-  - AC: `npm run etl:validate -- tests/fixtures/bad-schema.csv; echo "exit=$?"` → prints `exit=1` AND stderr contains the token `SCHEMA_VIOLATION:` followed by the offending column name (error-token vocabulary: `SCHEMA_VIOLATION:` `ROWCOUNT_ANOMALY:` `RATIO_RANGE:` `FETCH_INTEGRITY:` — every validation failure emits exactly one)
+  - AC: `npm run etl:validate -- tests/fixtures/invalid/bad-schema.csv; echo "exit=$?"` → prints `exit=1` AND stderr contains the token `SCHEMA_VIOLATION:` followed by the offending column name (invalid fixtures live in `tests/fixtures/invalid/` so B.1's count-4 AC stays true — amendment approved 2026-07-07) (error-token vocabulary: `SCHEMA_VIOLATION:` `ROWCOUNT_ANOMALY:` `RATIO_RANGE:` `FETCH_INTEGRITY:` — every validation failure emits exactly one)
   - AC (gate critique #4): `npm run etl:fetch -- --url https://files.zillowstatic.com/DOES-NOT-EXIST.csv` → exits 1 naming the failed URL (404/rename path fails loudly)
 - [ ] **Task B.4 — Metro boundaries: CBSA cartographic shapefile → simplified GeoJSON → prebuilt SVG choropleth** (mapshaper + d3-geo, pure JS — ADR-0004; no tippecanoe/PMTiles in V1)
-  - AC: `npm run map:build -- --fixtures` → emits `metro-map.svg`; `npm run map:verify` → path count == joined-metro count, every path has a fill class + data-region-id
+  - AC: `npm run map:build -- --fixtures` → emits `metro-map.svg`; `npm run map:verify` → prints `PATHS=<n> JOINED=<n> OK` and exits 0 (path count == joined-metro count, every path has a fill class + data-region-id); on any failure prints `MAP_VERIFY:` + reason to stderr and exits 1 (amendment approved 2026-07-07)
 
 ## Phase C — Map + Pages
 **Exit condition:** deployed site shows interactive choropleth + metro pages from fixture data; screenshot verification passed.
