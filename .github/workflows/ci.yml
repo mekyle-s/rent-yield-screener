@@ -25,6 +25,11 @@ jobs:
         run: |
           npm run etl -- --input tests/fixtures --out /tmp/etl-out
           diff -r /tmp/etl-out tests/golden/
+      - name: Map determinism — rebuild SVG on fixtures and diff committed copy
+        run: |
+          npm run map:build -- --fixtures
+          npm run map:verify
+          git diff --exit-code data/map/metro-map.svg
       - name: Build
         run: npm run build
       - name: Attribution compliance (constitution V)

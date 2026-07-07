@@ -5,16 +5,16 @@
 # Progress — Rent-Yield Screener
 
 ## Active task
-B.3 — Fetch-integrity + validation gate (test-first)
+Phase B exit gate — /code-review on full phase diff, CI full-pipeline green, user checkpoint
 
 ## Status
 **PHASE B IN PROGRESS at Rung 1 (watched).** B.1 ✅ (2026-07-07). Phase B plan approved with 5 notes: (1) invalid fixtures → tests/fixtures/invalid/ [ROADMAP amended]; (2) B.2 CI AC via `gh run watch --exit-status` [amended]; (3) B.4 map:verify exact output contract `PATHS=<n> JOINED=<n> OK` / `MAP_VERIFY:` stderr [amended]; (4) crosswalk source + coverage stated to Mekyle BEFORE building, unmatched list shown, never silent drops; (5) /code-review on full phase diff before Phase B exit checkpoint.
 
 ## Last action & result
-2026-07-07: B.2 done (B.1 done earlier same day). 18 transform tests red→green; golden committed (15 metros, 14 zips, snapshotMonth 2026-05); double-run + golden diffs empty; CI green ON UBUNTU incl. golden-diff step (run 28903..., conclusion success) — cross-platform byte-identity proven. DATA FINDING: ZIP 92662 (Balboa Island) has legit P2R=182.9 (thin ZORI in luxury ZIPs) → ZIP-level RATIO_RANGE bounds are a B.3 design decision for Mekyle.
+2026-07-07: B.3 + B.4 done same session (all ACs green, CI green each push). B.3: validators test-first, RATIO_RANGE = distribution check (Mekyle-approved: metro hard [5,60], ZIP finite+positive with median in [5,60]). B.4: crosswalk from Zillow's own CountyCrossWalk_Zillow.csv (ID concordance, no name-matching, 894/894 live coverage, 0 unmatched — note-4 statement given); cb_2023 boundaries 935 features committed; map:build/map:verify meet the exact amended contract (PATHS=15 JOINED=15 OK; corruption test correctly named the missing metro). Security: mapshaper's file-type advisories killed via npm override file-type@22.0.1 — npm audit 0 vulns, conversion verified post-override.
 
 ## Next action
-B.3 — failing tests first for validators + error tokens (SCHEMA_VIOLATION:/ROWCOUNT_ANOMALY:/RATIO_RANGE:/FETCH_INTEGRITY: — exactly one per failure, stderr, exit 1). Invalid fixtures in tests/fixtures/invalid/ (amended path). DECISION NEEDED from Mekyle: RATIO_RANGE bounds — metro band tight, but ZIP-level must not fail on real outliers like 92662. ACs: etl:validate bad-schema → exit=1 + token; etl:fetch --url DOES-NOT-EXIST → exit 1 naming URL.
+Phase B exit: CI now also rebuilds the SVG on ubuntu and diffs the committed copy (full-pipeline determinism). Then /code-review over 992019b..HEAD (approval note 5), findings to Mekyle, checkpoint.
 
 ## Learnings / guardrails
 - ETL determinism is constitutional (VI): always compare double-run outputs with `diff -r` before claiming done.
