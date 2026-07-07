@@ -24,6 +24,9 @@ Free ZIP/metro-level price-to-rent choropleth + programmatic metro SEO pages, re
 5. No realtime infrastructure, ever (constitution VI). ETL must be deterministic per snapshot.
 
 ## Gotchas
-- Windows dev box: guard against CRLF drift in committed JSON (set `.gitattributes`); ETL output must be byte-identical cross-platform (write LF explicitly).
-- Cloudflare Pages free tier: 20K-file cap — ZIP-level pages are DEFERRED; keep map data in single PMTiles on R2, never as many small JSON files.
+- **Map/data stack: ADR-0004 is the single source of truth.** V1 = prebuilt SVG choropleth + single `latest.json` + monthly git tags. NO MapLibre/PMTiles/R2 in V1 — they arrive with the V2 ZIP layer (≤8.4K ZIPs, coverage disclosed).
+- **Determinism rules (constitution VI, enforced by the committed golden snapshot):** output = array-of-records sorted by RegionID; NEVER construct `Date` objects (compare YYYY-MM-DD lexically); NEVER locale formatting; fixed decimal precision; LF-only (`.gitattributes` set).
+- Zillow CSVs: detect date columns by regex `^\d{4}-\d{2}-\d{2}$` (metro=5 meta cols, ZIP=9 — never positional); ZIP RegionName is a string (leading zeros); nulls stay null; only ~8,444 ZIPs have rent data.
+- JSON-LD injection: escape `<`/`>`/`&` in the serializer before `set:html` — check-seo asserts it.
+- All ROADMAP ACs run under Git Bash, never PowerShell-verbatim.
 - Zillow CSV region IDs ≠ Census CBSA codes everywhere — the crosswalk lives in `data/crosswalk/` and has its own tests.

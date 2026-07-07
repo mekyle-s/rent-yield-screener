@@ -1,38 +1,50 @@
-# V1 Blueprint (consolidated from reference-repo mining) — STATUS: DRAFT pending architecture gate
+<!-- SYNC IMPACT REPORT (2026-07-07, on gate acceptance):
+     Status DRAFT → ACCEPTED. This ADR is now the SINGLE SOURCE OF TRUTH for the V1 map/data stack.
+     Amended in the same change: PRD.md (In Scope, Expansion ≤8.4K ZIPs, Constraints → point here),
+     ROADMAP.md (header shell note; B.2 golden-snapshot AC; B.3 fetch-integrity gate; B.4 GeoJSON+SVG;
+     C.1 SVG choropleth; C.3 JSON-LD escaping assert; D.1 metro-scope; D.2 no-R2 deploy; D.3 deleted),
+     CLAUDE.md (map gotcha, determinism rules), DEFERRED.md (+MapLibre-in-V1, +per-metro OG, +custom alerting).
+     Supersedes the map/storage lines of ADR-0001 (stack) — Astro/Pages/Actions unchanged. -->
+
+# V1 Blueprint — ACCEPTED at architecture gate (critique + simplicity review folded in)
 
 ## Context and Problem Statement
-Three mining briefs (PMTiles serverless, astro-paper SEO, Zillow ETL — HQ `research/phase-2/mining-*.md`) settled nine implementation decisions and surfaced one big fact: **only ~8,444 ZIPs have ZORI rent data (of 26,274 with ZHVI)** — the "33K ZIP map" was never real; the ZIP layer is ~8.4K regions. This blueprint consolidates the V1 architecture for the gate to challenge.
+Three mining briefs settled the implementation patterns and surfaced a decisive fact: **only ~8,444 ZIPs have ZORI rent data** (of 26,274 with ZHVI; ~26% of ZCTAs) — the "30K-ZIP map" never existed for a P2R metric. The gate (adversarial critique: 3× CONCERNS, no blockers; simplicity review: keep cut + 4 more cuts) reshaped the draft into the minimal V1 below.
 
-## The proposed V1 shape
+## Decision Outcome — the minimal V1
+**Monthly deterministic ETL → single `latest.json` of metro P2R ratios → static Astro pages with a prebuilt SVG national choropleth linking to per-metro pages (ratio + 12-mo trend + top-ZIP table + Zillow attribution), one default OG image, sitemap — zero infra beyond Cloudflare Pages + GitHub Actions, zero client map dependency.**
 
 ### ETL (Phase B) — TypeScript, deterministic, fixture-tested
-- Fetch 4 CSVs (ZHVI/ZORI × ZIP/Metro; current `files.zillowstatic.com` URLs incl. the `mfr` ZORI filenames).
-- Parse: detect date columns by regex `^\d{4}-\d{2}-\d{2}$` (NEVER positional slicing — metro has 5 meta cols, ZIP has 9); ZIP RegionName as string (leading zeros); melt wide→long `(RegionID, monthEnd, value)`; nulls stay null (NEVER fillna(0)).
-- Join: **inner on RegionID**; ratio month = per-region latest month where BOTH ZHVI and ZORI are non-null; month recorded in output metadata. Outer-join audit counts (ZHVI-only / ZORI-only) in validation output.
-- P2R ratio = ZHVI value ÷ (ZORI rent × 12). Output: versioned JSON, LF-only, byte-identical re-runs (constitution VI).
-- Validation gate: schema check, row-count sanity vs prior snapshot, ratio range sanity, national-row (SizeRank 0) exclusion.
+- Fetch 4 CSVs (ZHVI/ZORI × ZIP/Metro; current `files.zillowstatic.com` URLs incl. `mfr` ZORI filenames).
+- **Fetch-integrity gate (critique #4):** HTTP 200 + CSV content-type + expected header row + non-empty, BEFORE parsing; 404/rename fails loudly (Zillow renamed ZORI once already). GH Actions' default failure email is the alert — no custom issue-opener (simplicity cut #3).
+- Parse: date columns by regex `^\d{4}-\d{2}-\d{2}$` (never positional); ZIP RegionName as string (leading zeros); melt wide→long; nulls stay null (never fillna-0); SizeRank-0 national row excluded.
+- Join: **inner on RegionID**; ratio month = per-region latest month where BOTH series are non-null; month in output metadata; outer-join audit counts in validation.
+- P2R = ZHVI ÷ (ZORI × 12).
+- **Determinism rules (critique #7, constitution VI):** canonical output = array-of-records sorted by RegionID; NO `new Date()` construction (lexical YYYY-MM-DD comparison only); NO locale formatting; fixed decimal precision; LF-only.
+- **Determinism proof (critique #2):** a golden output snapshot is COMMITTED; CI regenerates from fixtures and diffs against it — this tests cross-platform byte-identity for real, not same-runner twice.
+- **Storage (simplicity cut #4):** single `latest.json` in-repo, monthly git tag = the as-reported history (ZHVI/ZORI are smoothed/seasonally-adjusted and restated monthly — tags are the only true vintage record; accumulated snapshots would mix vintages).
 
-### Map (Phase C) — SIMPLIFICATION PROPOSED, gate must rule
-- **V1 = metro-level choropleth ONLY: single simplified GeoJSON (~739 joined metros, CBSA cartographic boundaries via mapshaper), served as a static asset from the repo/Pages.** NO PMTiles, NO R2, NO custom domain, NO tippecanoe in V1.
-- Rationale: PMTiles' complexity earns its keep at the 8.4K-ZIP layer, not at 739 metros (~1–3MB gzipped GeoJSON). This deletes an entire infrastructure dependency (R2 + custom-domain caching caveat) from V1.
-- ZIP layer (~8.4K regions) → V2, using the mined PMTiles pattern verbatim: ratios baked into tiles, direct-to-public-R2, the exact tippecanoe flag set (maxzoom 9, no-tiny-polygon-reduction, no coalesce), worker only if edge-cache tuning proves needed.
-- MapLibre GL either way (fill-color interpolate on `p2r` property) — V1 reads GeoJSON source, V2 adds pmtiles protocol. ROADMAP B.4 amends from "PMTiles build" to "metro GeoJSON build" if the gate accepts.
+### Map (Phase C) — prebuilt SVG choropleth (simplicity cut #1)
+- **No MapLibre, no PMTiles, no R2, no tippecanoe, no custom domain in V1.**
+- ETL-time build with d3-geo + mapshaper (both pure JS — Windows-dev + ubuntu-CI safe, resolves the tippecanoe-has-no-Windows-build blocker): CBSA cartographic boundaries → simplified → projected → inline SVG with one `<path>` per metro, fill baked from P2R, tiny vanilla hover/click JS.
+- Dense-cluster mitigation: companion searchable metro index (wanted regardless).
+- V2 ZIP layer (~8.4K regions, honestly disclosed): the mined PMTiles pattern verbatim (ratios in tiles, direct-to-public-R2, documented tippecanoe flags, maxzoom 9) + MapLibre returns. Requires an explicit "no rent data" legend state + coverage disclosure (critique #5). Marked SUPERVISED (R2/CF secrets + bucket = human gates, critique #6).
 
-### Pages & SEO (Phase C) — adopt astro-paper patterns
-- Data as typed collection via Astro `file()` loader + zod schema over ETL JSON (getCollection ergonomics, validation for free).
-- Layered layouts: base `Layout.astro` owns universal meta (title/description/canonical/OG/Twitter, `<slot name="head" />`); `MetroLayout.astro` injects per-metro JSON-LD (Dataset/FAQPage) through the head slot.
-- `@astrojs/sitemap` (auto-covers getStaticPaths routes) + `robots.txt.ts` endpoint deriving sitemap URL from `site`.
-- Per-metro OG images: satori+sharp build-time endpoint (`[slug]/og.png.ts` with mirrored getStaticPaths). Ship site-wide default first if build time bites.
-- Zillow attribution in the metro page template (CI-asserted).
+### Pages & SEO (Phase C) — astro-paper patterns
+- Data as typed collection: Astro `file()` loader + zod schema over `latest.json`.
+- Layered layouts: base `Layout.astro` (universal meta + `<slot name="head" />`); `MetroLayout.astro` injects per-metro JSON-LD — **with `<`/`>`/`&` escaped in the serializer (critique #8)**, asserted by the check-seo script.
+- `@astrojs/sitemap` + `robots.txt.ts` endpoint.
+- **One default OG image (simplicity cut #2)** — static file, which also deletes the satori/sharp native-dep lockfile risk (critique #3) from V1 entirely. Per-metro OG → DEFERRED.
+- Zillow attribution in the metro template (CI-asserted, constitution V).
+
+### Ops note (critique #9)
+All ROADMAP ACs run under **Git Bash** (never PowerShell-verbatim) — stated in the ROADMAP header. Monthly cron commits `latest.json` + pushes; Cloudflare Pages auto-deploys on push — the built-in GITHUB_TOKEN suffices, no new secrets in V1.
 
 ## Considered Options
-- V1 with PMTiles/R2 from day 1 (as ROADMAP B.4 currently reads)
-- **V1 metro-GeoJSON-only, PMTiles deferred to the ZIP layer (proposed)**
-- Leaflet raster fallback (rejected: loses vector styling; MapLibre handles 739 polygons trivially)
+- V1 with PMTiles/R2/MapLibre from day 1 — rejected: infra + native-tooling burden for 739 polygons; tippecanoe blocks the Windows dev box.
+- **Minimal V1 above (chosen)**
+- Leaflet raster — rejected: loses vector styling, solves nothing SVG doesn't.
 
-## Decision Outcome
-Pending architecture gate (adversarial critique + simplicity review) + Mekyle checkpoint.
-
-### Consequences (if accepted)
-- Good: V1 has zero infra beyond Pages + GitHub Actions; every byte of map data versioned in git; ZIP/PMTiles complexity deferred until metro pages prove demand (mirrors the DEFERRED discipline).
-- Bad: V2 ZIP layer becomes a real infra step (R2 bucket, custom domain or worker); metro GeoJSON in-repo means ~MBs committed monthly (mitigate: keep only latest snapshot + tag history).
+### Consequences
+- Good: zero V1 infra beyond Pages+Actions; every moving part pure JS and fixture-testable; determinism actually proven in CI; all four gate MAJORs resolved by construction (no sharp, no R2 secrets, golden snapshot, fetch gate).
+- Bad / accepted: V2 ZIP layer is a real infra step (R2 + secrets + coverage-honesty work); SVG map has no pan/zoom (fine for a national screening view; revisit with the ZIP layer); ~1–3MB GeoJSON intermediate stays out of the client (only the SVG ships).

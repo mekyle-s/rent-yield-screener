@@ -6,7 +6,10 @@
 | Thing not built | Why deferred | Revisit when |
 |---|---|---|
 | Paid alerts tier (thresholds, watchlists, email) | V1 proves demand first; licensing must be re-verified before any paid code (constitution V) | Metro pages get organic traffic + email-capture list >100 |
-| ZIP-level pages (~30K) | Breaks CF Pages 20K-file cap; metro pages must prove demand first | Search Console shows metro-page impressions + KE rule outcome supports it |
+| ZIP-level map + pages (≤8.4K ZIPs — only 8,444 have rent data) | Metro must prove demand first; needs R2 + secrets + honest coverage disclosure (ADR-0004, gate critique #5/#6) | Search Console shows metro-page impressions + KE rule outcome supports it |
+| MapLibre GL + PMTiles + R2 | Gate simplicity cut #1: 739 metros don't earn a WebGL runtime; SVG suffices | The V2 ZIP layer (where they earn their keep) |
+| Per-metro OG images (satori/sharp) | Gate simplicity cut #2: share-card polish, not core loop; also deletes native-dep CI risk | Real social traffic exists to optimize |
+| Custom cron failure alerting (auto-issues) | Gate simplicity cut #3: GH Actions' default failure email suffices | Multiple data sources or contributors |
 | Accounts/auth | Nothing to gate in V1 | Alerts tier gets built |
 | Gross-yield / cap-proxy / FMR-spread metrics | One metric (P2R) must be legible first | Metro pages live + user feedback asks |
 | Rent/value forecasts | Reventure's arms race; we screen, we don't predict | Never, unless positioning pivots |
