@@ -114,7 +114,8 @@ describe("serialize — deterministic latest.json", () => {
   const zhvi = toRegionSeries(parseCsv(zhviMetroCsv));
   const zori = toRegionSeries(parseCsv(zoriMetroCsv));
   const metro = computeP2R(zhvi, zori);
-  const doc = buildLatestJson({ metro, zip: { records: [], audit: { joined: 0, zhviOnly: 0, zoriOnly: 0, zeroRent: 0 } } });
+  const emptyAudit = { joined: 0, zhviOnly: 0, zoriOnly: 0, zeroRent: 0, noSharedMonth: 0 };
+  const doc = buildLatestJson({ metro, zip: { records: [], audit: emptyAudit } });
 
   it("snapshotMonth = lexical max of record months (YYYY-MM)", () => {
     expect(doc.meta.snapshotMonth).toBe("2025-05");
@@ -131,7 +132,7 @@ describe("serialize — deterministic latest.json", () => {
     const again = serialize(
       buildLatestJson({
         metro: computeP2R(toRegionSeries(parseCsv(zhviMetroCsv)), toRegionSeries(parseCsv(zoriMetroCsv))),
-        zip: { records: [], audit: { joined: 0, zhviOnly: 0, zoriOnly: 0, zeroRent: 0 } },
+        zip: { records: [], audit: emptyAudit },
       }),
     );
     expect(again).toBe(serialize(doc));
