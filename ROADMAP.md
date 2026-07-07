@@ -28,7 +28,7 @@
   - AC: `npm test -- transform` → all pass (incl. edge cases: missing rent, missing value, div-by-zero, leading-zero ZIPs, metro-vs-ZIP column counts)
   - AC (golden snapshot, gate critique #2): `npm run etl -- --input tests/fixtures --out /tmp/out && diff -r /tmp/out tests/golden/` → no output — CI regenerates and diffs the COMMITTED golden snapshot (cross-platform byte-identity, constitution VI)
 - [ ] **Task B.3 — Fetch-integrity + validation gate** (HTTP 200 + CSV content-type + expected header row + non-empty BEFORE parse; schema check; row-count sanity; ratio-range sanity; outer-join audit counts)
-  - AC: `npm run etl:validate -- tests/fixtures/bad-schema.csv` → exits 1 with named violation
+  - AC: `npm run etl:validate -- tests/fixtures/bad-schema.csv; echo "exit=$?"` → prints `exit=1` AND stderr contains the token `SCHEMA_VIOLATION:` followed by the offending column name (error-token vocabulary: `SCHEMA_VIOLATION:` `ROWCOUNT_ANOMALY:` `RATIO_RANGE:` `FETCH_INTEGRITY:` — every validation failure emits exactly one)
   - AC (gate critique #4): `npm run etl:fetch -- --url https://files.zillowstatic.com/DOES-NOT-EXIST.csv` → exits 1 naming the failed URL (404/rename path fails loudly)
 - [ ] **Task B.4 — Metro boundaries: CBSA cartographic shapefile → simplified GeoJSON → prebuilt SVG choropleth** (mapshaper + d3-geo, pure JS — ADR-0004; no tippecanoe/PMTiles in V1)
   - AC: `npm run map:build -- --fixtures` → emits `metro-map.svg`; `npm run map:verify` → path count == joined-metro count, every path has a fill class + data-region-id
@@ -52,7 +52,8 @@
 - [ ] **Task D.1 — Full ETL on live data** (all metros per C.4 decision + ZIP data for top-ZIP tables; no ZIP map — ADR-0004)
   - AC: `npm run etl:live && npm run etl:validate` → exits 0; spot-check 3 known metros against Zillow's published values (±1%)
 - [ ] **Task D.2 — Monthly GitHub Actions cron** (fetch → transform → validate → rebuild SVG → commit latest.json + tag → push; Pages auto-deploys — built-in GITHUB_TOKEN only, no new secrets)
-  - AC: `gh workflow run refresh.yml` (manual trigger) → run green end-to-end; site shows new data timestamp
+  - AC: `gh workflow run refresh.yml && sleep 10 && gh run watch $(gh run list --workflow=refresh.yml --limit 1 --json databaseId -q ".[0].databaseId") --exit-status` → exits 0
+  - AC: `curl -s https://rent-yield-screener.pages.dev/ | grep -o 'data-snapshot-month="[0-9]\{4\}-[0-9]\{2\}"'` → prints the same `YYYY-MM` as `jq -r .meta.snapshotMonth data/latest.json` (the index page template MUST expose `data-snapshot-month` — requirement lands in C.2)
 <!-- D.3 failure alerting DELETED at gate (simplicity cut #3): GH Actions' default failure email suffices;
      the real failure mode (Zillow URL rename/404) is covered by B.3's fetch-integrity gate. -->
 
