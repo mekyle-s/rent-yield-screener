@@ -5,16 +5,16 @@
 # Progress — Rent-Yield Screener
 
 ## Active task
-A.2 — CI pipeline green on push (workflow file committed; needs GitHub remote)
+A.3 — Cloudflare Pages deploy (SUPERVISED — needs Mekyle's CF account)
 
 ## Status
-A.1 DONE — evidence: `npm test` → 1 passed · `npm run build` → dist/index.html · `npm run check` → 0 errors
+A.1 DONE · A.2 DONE — evidence: `gh run list` → `completed success CI main push 23s` (run 28844570893)
 
 ## Last action & result
-2026-07-07: Astro skeleton hand-rolled (package.json, config, index page, smoke test, .gitattributes LF-enforcement, CI workflow incl. attribution-compliance gate). All A.1 ACs pass locally.
+2026-07-07: public repo created (github.com/mekyle-s/rent-yield-screener), main branch pushed, first CI run green in 23s.
 
 ## Next action
-Mekyle creates GitHub remote (gh CLI not installed) → push → verify green Actions run (A.2 AC) → connect Cloudflare Pages (A.3).
+Mekyle: Cloudflare dash → Workers & Pages → Connect to Git → rent-yield-screener (build: `npm run build`, output: `dist`). Then AC: `curl -s -o /dev/null -w "%{http_code}" https://<project>.pages.dev` → 200 = Phase A exit.
 
 ## Learnings / guardrails
 - ETL determinism is constitutional (VI): always compare double-run outputs with `diff -r` before claiming done.
