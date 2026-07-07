@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
+    "etl": "tsx scripts/etl/run.ts",
     "etl:fetch": "tsx scripts/etl/fetch.ts"
   },
   "dependencies": {

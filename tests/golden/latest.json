@@ -1,0 +1,286 @@
+{
+  "meta": {
+    "snapshotMonth": "2026-05",
+    "audit": {
+      "metro": {
+        "joined": 15,
+        "zhviOnly": 2,
+        "zoriOnly": 1,
+        "zeroRent": 0,
+        "noSharedMonth": 0
+      },
+      "zip": {
+        "joined": 14,
+        "zhviOnly": 1,
+        "zoriOnly": 0,
+        "zeroRent": 0,
+        "noSharedMonth": 0
+      }
+    }
+  },
+  "metros": [
+    {
+      "regionId": "394347",
+      "regionName": "Atlanta, GA",
+      "stateName": "GA",
+      "month": "2026-05",
+      "zhvi": 382938,
+      "zori": 1840,
+      "ratio": 17.34
+    },
+    {
+      "regionId": "394404",
+      "regionName": "Boston, MA",
+      "stateName": "MA",
+      "month": "2026-05",
+      "zhvi": 741868,
+      "zori": 3211,
+      "ratio": 19.25
+    },
+    {
+      "regionId": "394463",
+      "regionName": "Chicago, IL",
+      "stateName": "IL",
+      "month": "2026-05",
+      "zhvi": 353998,
+      "zori": 2266,
+      "ratio": 13.02
+    },
+    {
+      "regionId": "394514",
+      "regionName": "Dallas, TX",
+      "stateName": "TX",
+      "month": "2026-05",
+      "zhvi": 366823,
+      "zori": 1678,
+      "ratio": 18.21
+    },
+    {
+      "regionId": "394532",
+      "regionName": "Detroit, MI",
+      "stateName": "MI",
+      "month": "2026-05",
+      "zhvi": 269080,
+      "zori": 1500,
+      "ratio": 14.95
+    },
+    {
+      "regionId": "394692",
+      "regionName": "Houston, TX",
+      "stateName": "TX",
+      "month": "2026-05",
+      "zhvi": 308306,
+      "zori": 1639,
+      "ratio": 15.67
+    },
+    {
+      "regionId": "394856",
+      "regionName": "Miami, FL",
+      "stateName": "FL",
+      "month": "2026-05",
+      "zhvi": 475622,
+      "zori": 2693,
+      "ratio": 14.72
+    },
+    {
+      "regionId": "394913",
+      "regionName": "New York, NY",
+      "stateName": "NY",
+      "month": "2026-05",
+      "zhvi": 727625,
+      "zori": 3503,
+      "ratio": 17.31
+    },
+    {
+      "regionId": "394974",
+      "regionName": "Philadelphia, PA",
+      "stateName": "PA",
+      "month": "2026-05",
+      "zhvi": 390463,
+      "zori": 1914,
+      "ratio": 17
+    },
+    {
+      "regionId": "394976",
+      "regionName": "Phoenix, AZ",
+      "stateName": "AZ",
+      "month": "2026-05",
+      "zhvi": 448352,
+      "zori": 1742,
+      "ratio": 21.45
+    },
+    {
+      "regionId": "395025",
+      "regionName": "Riverside, CA",
+      "stateName": "CA",
+      "month": "2026-05",
+      "zhvi": 585378,
+      "zori": 2519,
+      "ratio": 19.36
+    },
+    {
+      "regionId": "395057",
+      "regionName": "San Francisco, CA",
+      "stateName": "CA",
+      "month": "2026-05",
+      "zhvi": 1149215,
+      "zori": 3258,
+      "ratio": 29.4
+    },
+    {
+      "regionId": "395078",
+      "regionName": "Seattle, WA",
+      "stateName": "WA",
+      "month": "2026-05",
+      "zhvi": 750279,
+      "zori": 2232,
+      "ratio": 28.02
+    },
+    {
+      "regionId": "395209",
+      "regionName": "Washington, DC",
+      "stateName": "VA",
+      "month": "2026-05",
+      "zhvi": 583013,
+      "zori": 2416,
+      "ratio": 20.11
+    },
+    {
+      "regionId": "753899",
+      "regionName": "Los Angeles, CA",
+      "stateName": "CA",
+      "month": "2026-05",
+      "zhvi": 968608,
+      "zori": 2909,
+      "ratio": 27.75
+    }
+  ],
+  "zips": [
+    {
+      "regionId": "399516",
+      "regionName": "05408",
+      "stateName": "VT",
+      "month": "2026-05",
+      "zhvi": 462031,
+      "zori": 2635,
+      "ratio": 14.61
+    },
+    {
+      "regionId": "59228",
+      "regionName": "03833",
+      "stateName": "NH",
+      "month": "2026-04",
+      "zhvi": 660209,
+      "zori": 1973,
+      "ratio": 27.88
+    },
+    {
+      "regionId": "60647",
+      "regionName": "07310",
+      "stateName": "NJ",
+      "month": "2026-01",
+      "zhvi": 900712,
+      "zori": 4217,
+      "ratio": 17.8
+    },
+    {
+      "regionId": "61148",
+      "regionName": "08701",
+      "stateName": "NJ",
+      "month": "2026-05",
+      "zhvi": 585512,
+      "zori": 2124,
+      "ratio": 22.97
+    },
+    {
+      "regionId": "62019",
+      "regionName": "11208",
+      "stateName": "NY",
+      "month": "2026-05",
+      "zhvi": 729862,
+      "zori": 3227,
+      "ratio": 18.85
+    },
+    {
+      "regionId": "62080",
+      "regionName": "11368",
+      "stateName": "NY",
+      "month": "2026-05",
+      "zhvi": 551389,
+      "zori": 2678,
+      "ratio": 17.16
+    },
+    {
+      "regionId": "62093",
+      "regionName": "11385",
+      "stateName": "NY",
+      "month": "2026-05",
+      "zhvi": 871684,
+      "zori": 3340,
+      "ratio": 21.75
+    },
+    {
+      "regionId": "91733",
+      "regionName": "77084",
+      "stateName": "TX",
+      "month": "2026-05",
+      "zhvi": 267577,
+      "zori": 1579,
+      "ratio": 14.12
+    },
+    {
+      "regionId": "91940",
+      "regionName": "77449",
+      "stateName": "TX",
+      "month": "2026-05",
+      "zhvi": 271763,
+      "zori": 1811,
+      "ratio": 12.51
+    },
+    {
+      "regionId": "91982",
+      "regionName": "77494",
+      "stateName": "TX",
+      "month": "2026-05",
+      "zhvi": 489671,
+      "zori": 1731,
+      "ratio": 23.58
+    },
+    {
+      "regionId": "92593",
+      "regionName": "78660",
+      "stateName": "TX",
+      "month": "2026-05",
+      "zhvi": 377245,
+      "zori": 1682,
+      "ratio": 18.69
+    },
+    {
+      "regionId": "93144",
+      "regionName": "79936",
+      "stateName": "TX",
+      "month": "2026-05",
+      "zhvi": 224103,
+      "zori": 1491,
+      "ratio": 12.53
+    },
+    {
+      "regionId": "95992",
+      "regionName": "90011",
+      "stateName": "CA",
+      "month": "2026-05",
+      "zhvi": 603791,
+      "zori": 2654,
+      "ratio": 18.96
+    },
+    {
+      "regionId": "96980",
+      "regionName": "92662",
+      "stateName": "CA",
+      "month": "2025-12",
+      "zhvi": 4287064,
+      "zori": 1953,
+      "ratio": 182.92
+    }
+  ]
+}
