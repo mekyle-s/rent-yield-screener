@@ -7,13 +7,25 @@ import { readFileSync, existsSync } from "node:fs";
 import { validateCsvSchema, validateLatest } from "../../src/etl/validate";
 
 const args = process.argv.slice(2);
+// Support both `--flag value` and `--flag=value` (finding #5): the equals form
+// was silently dropped by an indexOf-only lookup, falling back to the default.
 const flag = (name: string) => {
+  const eq = args.find((a) => a.startsWith(`${name}=`));
+  if (eq !== undefined) return eq.slice(name.length + 1);
   const i = args.indexOf(name);
   return i !== -1 ? args[i + 1] : undefined;
 };
 const num = (name: string, dflt: number) => {
   const v = flag(name);
-  return v === undefined ? dflt : Number(v);
+  if (v === undefined) return dflt;
+  const n = Number(v);
+  // A non-numeric threshold (e.g. "5,000" → NaN) must NOT silently disable the
+  // gate: `count < NaN` is always false, so a coverage collapse would validate OK.
+  if (!Number.isFinite(n)) {
+    process.stderr.write(`usage: ${name} expects a number, got "${v}"\n`);
+    process.exit(1);
+  }
+  return n;
 };
 
 // Live-scale defaults: current data has ~722 joined metros and ~8.4K rent ZIPs;

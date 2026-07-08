@@ -38,6 +38,43 @@ describe("etl:validate CLI (finding #2 — no vacuous pass)", () => {
   });
 });
 
+describe("etl:validate threshold parsing (finding #5)", () => {
+  // A valid latest.json so we reach threshold handling, not schema/rowcount errors.
+  function withLatest(extraArgs: string[]) {
+    const dir = mkdtempSync(join(tmpdir(), "rys-thresh-"));
+    const latest = join(dir, "latest.json");
+    const rec = (id: string, ratio: number) => ({
+      regionId: id, regionName: "X", stateName: "XX", month: "2026-05", zhvi: 100000, zori: 1000, ratio,
+    });
+    const audit = { joined: 0, zhviOnly: 0, zoriOnly: 0, zeroRent: 0, noSharedMonth: 0 };
+    writeFileSync(latest, JSON.stringify({
+      meta: { snapshotMonth: "2026-05", audit: { metro: audit, zip: audit } },
+      metros: Array.from({ length: 10 }, (_, i) => rec(`m${i}`, 10 + i)),
+      zips: Array.from({ length: 20 }, (_, i) => rec(`z${i}`, 8 + i)),
+    }));
+    try {
+      return runCli(VALIDATE, ["--latest", latest, ...extraArgs]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  it("rejects a non-numeric threshold instead of silently disabling the gate", () => {
+    // Number("5,000") is NaN → `zips.length < NaN` is always false → gate off.
+    const r = withLatest(["--min-zips", "5,000"]);
+    expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(1);
+    expect(r.stderr.toLowerCase()).toContain("min-zips");
+  });
+
+  it("honors the --flag=value form", () => {
+    // Doc has 10 metros / 20 zips. Both fall below the DEFAULTS (500 / 5000), so
+    // the run can only pass if BOTH equals-form thresholds are actually honored;
+    // if either is ignored the default trips ROWCOUNT_ANOMALY. Passing proves it.
+    const r = withLatest(["--min-metros=5", "--min-zips=10"]);
+    expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(0);
+  });
+});
+
 describe("build-crosswalk generator (finding #4 — 1:1 both directions)", () => {
   const COUNTY_HEADER = "CountyRegionID_Zillow,MetroRegionID_Zillow,CBSACode";
   function build(rows: string[]) {
