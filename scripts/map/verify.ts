@@ -25,12 +25,32 @@ const latestPath = source === "fixtures" ? "tests/golden/latest.json" : "data/la
 const latest = JSON.parse(readFileSync(latestPath, "utf8"));
 const joined: number = latest.metros.length;
 
+const viewBox = svg.match(/viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)"/);
+if (!viewBox) die("SVG missing viewBox");
+const vbW = Number(viewBox[1]);
+const vbH = Number(viewBox[2]);
+
 const pathTags = svg.match(/<path\b[^>]*>/g) ?? [];
 const paths = pathTags.length;
 
 for (const tag of pathTags) {
   if (!/class="p2r-b\d"/.test(tag)) die(`path missing fill class: ${tag.slice(0, 120)}`);
   if (!/data-region-id="[^"]+"/.test(tag)) die(`path missing data-region-id: ${tag.slice(0, 120)}`);
+  // Geometry guard (finding #1): a complemented ring (RFC 7946 winding read by
+  // d3-geo) is emitted as the clip-extent rectangle spanning the whole canvas.
+  // No real metro path can span the full viewBox — reject any that does.
+  const d = tag.match(/\bd="([^"]*)"/)?.[1] ?? "";
+  const nums = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    minX = Math.min(minX, nums[i]);
+    maxX = Math.max(maxX, nums[i]);
+    minY = Math.min(minY, nums[i + 1]);
+    maxY = Math.max(maxY, nums[i + 1]);
+  }
+  const rid = tag.match(/data-region-id="([^"]+)"/)?.[1] ?? "?";
+  if (maxX - minX >= vbW && maxY - minY >= vbH)
+    die(`path ${rid} spans the full viewBox (complemented ring — check boundary winding): ${d.slice(0, 60)}`);
 }
 
 const ids = pathTags.map((t) => t.match(/data-region-id="([^"]+)"/)![1]);
