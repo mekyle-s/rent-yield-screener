@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { validateCsvSchema, validateLatest } from "../src/etl/validate";
+import { validateCsvSchema, validateLatest, median } from "../src/etl/validate";
 import type { LatestJson } from "../src/etl/serialize";
 
 // Error-token vocabulary (ROADMAP B.3): every failure emits exactly one of
@@ -106,6 +106,19 @@ describe("validateLatest — rowcount + ratio-range (distribution check per appr
     const res = validateLatest(doc(okMetros, shifted), { minMetros: 5, minZips: 10 });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.token).toBe("RATIO_RANGE:");
+  });
+
+  it("empty zips with minZips 0 passes without a NaN median (finding #6)", () => {
+    // A metro-only latest.json is a legitimate V1 shape (ADR-0004). median([]) is
+    // NaN and `NaN < lo || NaN > hi` is false, so the old code "passed" by evaluating
+    // nothing. The distribution check must be SKIPPED for zero zips, not NaN-passed.
+    const res = validateLatest(doc(okMetros, []), { minMetros: 5, minZips: 0 });
+    expect(res.ok).toBe(true);
+  });
+
+  it("median() rejects an empty array rather than returning NaN (finding #6)", () => {
+    expect(() => median([])).toThrow();
+    expect(median([3, 1, 2])).toBe(2);
   });
 
   it("committed golden snapshot passes with fixture-scale minimums", () => {

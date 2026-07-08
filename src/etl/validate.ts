@@ -43,7 +43,11 @@ export function validateCsvSchema(text: string): ValidationResult {
 
 const METRO_BAND: [number, number] = [5, 60];
 
-function median(xs: number[]): number {
+// Throws on an empty array (finding #6): median([]) used to be NaN, and
+// `NaN < lo || NaN > hi` is false, so the ZIP distribution check silently passed
+// having evaluated nothing. Callers must guard the empty case explicitly.
+export function median(xs: number[]): number {
+  if (xs.length === 0) throw new Error("median of empty array");
   const s = [...xs].sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
@@ -67,9 +71,13 @@ export function validateLatest(
     if (!Number.isFinite(r.ratio) || r.ratio <= 0)
       return fail("RATIO_RANGE:", `zip ${r.regionId} ratio=${r.ratio} non-positive or non-finite`);
 
-  const zipMedian = median(doc.zips.map((r) => r.ratio));
-  if (zipMedian < lo || zipMedian > hi)
-    return fail("RATIO_RANGE:", `zip median=${zipMedian} outside [${lo},${hi}] — systematic corruption?`);
+  // Distribution check only applies when ZIPs exist; a metro-only latest.json
+  // (minZips 0, ADR-0004 V1) has nothing to check — skip rather than NaN-pass.
+  if (doc.zips.length > 0) {
+    const zipMedian = median(doc.zips.map((r) => r.ratio));
+    if (zipMedian < lo || zipMedian > hi)
+      return fail("RATIO_RANGE:", `zip median=${zipMedian} outside [${lo},${hi}] — systematic corruption?`);
+  }
 
   return { ok: true };
 }
