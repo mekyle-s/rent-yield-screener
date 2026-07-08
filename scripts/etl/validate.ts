@@ -38,7 +38,13 @@ function die(token: string, detail: string): never {
   process.exit(1);
 }
 
-const csvPaths = args.filter((a, i) => !a.startsWith("--") && args[i - 1]?.startsWith("--") !== true);
+// A positional is a CSV path unless it's the VALUE of a space-form flag. Only a
+// bare `--flag` (no `=`) consumes the next arg; `--flag=value` carries its own
+// value, so the arg after it is a real path and must not be swallowed (equals-form
+// regression uncovered in the finding-#5 review).
+const csvPaths = args.filter(
+  (a, i) => !a.startsWith("--") && !(args[i - 1]?.startsWith("--") && !args[i - 1]!.includes("=")),
+);
 const latestPath = flag("--latest");
 
 if (csvPaths.length === 0 && !latestPath) {

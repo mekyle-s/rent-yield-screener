@@ -77,6 +77,27 @@ describe("etl:validate threshold parsing (finding #5)", () => {
     const r = withLatest(["--min-metros=5", "--min-zips=10"]);
     expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(0);
   });
+
+  it("does not drop a positional CSV path that follows an equals-form flag", () => {
+    // Regression: the csvPaths filter skips the arg after any `--`-prefixed arg to
+    // drop space-form flag VALUES, but `--min-metros=500` also starts with `--`, so
+    // the CSV after it was misread as that flag's value and silently dropped —
+    // falling into default mode and validating the wrong files (or nothing) at exit 0.
+    const dir = mkdtempSync(join(tmpdir(), "rys-positional-"));
+    const bad = join(dir, "bad-schema.csv");
+    // Missing StateName meta column → a schema violation IF the path is validated.
+    writeFileSync(bad, "RegionID,SizeRank,RegionName,RegionType,2025-05-31\n1,1,A,msa,100\n");
+    try {
+      // Run in an EMPTY cwd so default mode has nothing to validate — if the path
+      // were dropped, the finding-#2 guard would fire FETCH_INTEGRITY: instead.
+      const r = runCli(VALIDATE, ["--min-metros=500", bad], dir);
+      expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(1);
+      expect(r.stderr).toContain("SCHEMA_VIOLATION:");
+      expect(r.stderr).not.toContain("FETCH_INTEGRITY:"); // proves default mode was NOT entered
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("etl:fetch floating-promise contract (finding #9)", () => {
