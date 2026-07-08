@@ -31,14 +31,21 @@ const latestPath = flag("--latest");
 
 if (csvPaths.length === 0 && !latestPath) {
   // Default mode (D.1: `npm run etl:live && npm run etl:validate`)
-  const defaults = [
+  const expected = [
     ".cache/zillow-raw/zhvi-metro.csv",
     ".cache/zillow-raw/zhvi-zip.csv",
     ".cache/zillow-raw/zori-metro.csv",
     ".cache/zillow-raw/zori-zip.csv",
-  ].filter(existsSync);
+  ];
+  const defaults = expected.filter(existsSync);
+  // Vacuous-pass guard (finding #2): default mode must never exit 0 having
+  // validated nothing. A cleared cache or a fetch that wrote elsewhere means the
+  // publish must FAIL loudly, not proceed on unvalidated/nonexistent data.
+  const hasLatest = existsSync("data/latest.json");
+  if (defaults.length === 0 && !hasLatest)
+    die("FETCH_INTEGRITY:", `no inputs to validate — expected ${expected.join(", ")} or data/latest.json`);
   csvPaths.push(...defaults);
-  if (existsSync("data/latest.json")) {
+  if (hasLatest) {
     const res = validateLatest(JSON.parse(readFileSync("data/latest.json", "utf8")), { minMetros, minZips });
     if (!res.ok) die(res.token, res.detail);
     console.log("latest.json OK (data/latest.json)");
