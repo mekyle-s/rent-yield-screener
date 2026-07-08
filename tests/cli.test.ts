@@ -6,9 +6,12 @@ import { join } from "node:path";
 
 // Script-level regression tests for the ETL/map CLIs (review findings 2, 5, 7, 8, 9).
 // These exercise the argv/exit-code/error-token contracts the unit tests can't reach.
+import { readFileSync, existsSync, renameSync } from "node:fs";
+
 const ROOT = process.cwd();
 const VALIDATE = join(ROOT, "scripts/etl/validate.ts");
 const BUILD_CROSSWALK = join(ROOT, "scripts/etl/build-crosswalk.ts");
+const MAP_VERIFY = join(ROOT, "scripts/map/verify.ts");
 
 // Run a CLI via tsx. Returns { status, stdout, stderr }. Never throws on non-zero exit.
 function runCli(script: string, args: string[], cwd = ROOT) {
@@ -72,6 +75,31 @@ describe("etl:validate threshold parsing (finding #5)", () => {
     // if either is ignored the default trips ROWCOUNT_ANOMALY. Passing proves it.
     const r = withLatest(["--min-metros=5", "--min-zips=10"]);
     expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(0);
+  });
+});
+
+describe("map:verify latest.json read (finding #8 — honors MAP_VERIFY: contract)", () => {
+  const SVG = join(ROOT, "data/map/metro-map.svg");
+  const BAK = join(ROOT, "data/map/metro-map.svg.testbak");
+
+  it("emits MAP_VERIFY: (not a raw stack trace) when the source latest.json is missing", () => {
+    // A live-sourced SVG points at data/latest.json, which does not exist until
+    // Phase D. The read must be guarded so failures speak the MAP_VERIFY: token.
+    expect(existsSync(join(ROOT, "data/latest.json"))).toBe(false); // guard the premise
+    const good = readFileSync(SVG, "utf8");
+    // Re-tag the committed SVG as live without touching its geometry.
+    const live = good.replace(/data-source="fixtures"/, 'data-source="live"');
+    renameSync(SVG, BAK);
+    writeFileSync(SVG, live);
+    try {
+      const r = runCli(MAP_VERIFY, []);
+      expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(1);
+      expect(r.stderr).toContain("MAP_VERIFY:");
+      expect(r.stderr).not.toMatch(/at .*\.ts:\d+/); // no raw stack trace
+    } finally {
+      rmSync(SVG, { force: true });
+      renameSync(BAK, SVG);
+    }
   });
 });
 

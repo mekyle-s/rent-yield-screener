@@ -22,7 +22,14 @@ try {
 const source = svg.match(/data-source="(fixtures|live)"/)?.[1];
 if (!source) die("SVG missing data-source attribute");
 const latestPath = source === "fixtures" ? "tests/golden/latest.json" : "data/latest.json";
-const latest = JSON.parse(readFileSync(latestPath, "utf8"));
+let latest: { metros: { regionId: string; regionName: string }[] };
+try {
+  // Guarded so a missing/corrupt latest.json speaks the MAP_VERIFY: token
+  // instead of a raw ENOENT/parse stack trace (finding #8, amended B.4 contract).
+  latest = JSON.parse(readFileSync(latestPath, "utf8"));
+} catch (e) {
+  die(`cannot read ${latestPath} (${(e as Error).message})`);
+}
 const joined: number = latest.metros.length;
 
 const viewBox = svg.match(/viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)"/);
