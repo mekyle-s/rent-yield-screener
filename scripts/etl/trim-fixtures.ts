@@ -72,7 +72,11 @@ mkdirSync(OUT, { recursive: true });
 // --- metro selection ---
 const zoriMetroIds = new Set(zoriMetro.rows.map((r) => r.id));
 const zhviMetroIds = new Set(zhviMetro.rows.map((r) => r.id));
-const byId = (a: Row, b: Row) => a.id.localeCompare(b.id);
+// Lexical, NOT localeCompare (finding #11): this sort picks WHICH rows become
+// fixtures, so locale-dependent collation could select different rows on
+// regeneration. Every other sort in the repo compares YYYY-MM-DD/IDs lexically
+// (constitution VI determinism).
+const byId = (a: Row, b: Row) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 const metroCore = zhviMetro.rows.filter((r) => r.sizeRank <= 15); // includes SizeRank-0 national row
 const zhviOnlyMetros = zhviMetro.rows.filter((r) => !zoriMetroIds.has(r.id)).sort(byId).slice(0, 2);
