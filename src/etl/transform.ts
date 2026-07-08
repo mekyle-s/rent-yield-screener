@@ -36,11 +36,15 @@ export interface P2RResult {
 
 const round = (x: number, decimals: number) => Number(x.toFixed(decimals));
 
-// Melt wide→long keyed by RegionID; the SizeRank-0 national aggregate is excluded.
+// Melt wide→long keyed by RegionID; the national aggregate is excluded.
+// Key on region IDENTITY (RegionID 102001 / RegionType "country"), NOT SizeRank
+// (finding #10): SizeRank 0 is the national row in metro files, but a legitimate
+// ZIP could carry SizeRank 0 and must not be dropped.
+const NATIONAL_REGION_ID = "102001";
 export function toRegionSeries(parsed: ParsedCsv): Map<string, RegionSeries> {
   const out = new Map<string, RegionSeries>();
   for (const row of parsed.rows) {
-    if (row.meta.SizeRank === "0") continue;
+    if (row.meta.RegionID === NATIONAL_REGION_ID || row.meta.RegionType === "country") continue;
     out.set(row.meta.RegionID, {
       meta: row.meta,
       series: row.values,

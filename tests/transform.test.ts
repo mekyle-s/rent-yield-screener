@@ -83,11 +83,33 @@ describe("parseCsv — column detection & cell parsing", () => {
 });
 
 describe("toRegionSeries — melt wide→long", () => {
-  it("melts to per-region date→value maps and excludes the SizeRank-0 national row", () => {
+  it("melts to per-region date→value maps and excludes the national country row", () => {
     const regions = toRegionSeries(parseCsv(zhviMetroCsv));
     expect(regions.has("102001")).toBe(false); // national row excluded
     expect(regions.get("394913")!.series["2025-05-31"]).toBe(602000);
     expect(regions.get("394913")!.meta.RegionName).toBe("New York, NY");
+  });
+
+  it("excludes the national row by region identity, not SizeRank (finding #10)", () => {
+    // ZIP files carry no country row, but a legitimate ZIP could carry SizeRank 0.
+    // Keying on SizeRank==="0" would wrongly drop it; key on RegionID/RegionType.
+    const zipCsv = [
+      `${ZIP_HEADER},2025-05-31`,
+      // A real ZIP that happens to have SizeRank 0 — must be KEPT.
+      `71535,0,00601,zip,PR,PR,Adjuntas,"San Juan, PR",Adjuntas,150000`,
+    ].join("\n");
+    const regions = toRegionSeries(parseCsv(zipCsv));
+    expect(regions.has("71535")).toBe(true);
+
+    // The metro national aggregate (RegionID 102001 / RegionType country) is dropped.
+    const natCsv = [
+      `${METRO_HEADER},2025-05-31`,
+      `102001,0,United States,country,,350000`,
+      `394913,1,"New York, NY",msa,NY,600000`,
+    ].join("\n");
+    const metro = toRegionSeries(parseCsv(natCsv));
+    expect(metro.has("102001")).toBe(false);
+    expect(metro.has("394913")).toBe(true);
   });
 });
 
