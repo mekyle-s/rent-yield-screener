@@ -60,6 +60,19 @@ describe("parseCsv — column detection & cell parsing", () => {
     expect(la.values["2025-05-31"]).toBeNull();
     expect(la.values["2025-04-30"]).toBe(905000);
   });
+
+  it("parses non-numeric data cells as null, never 0 or NaN (finding #3)", () => {
+    // Number(" ") === 0 (a fabricated value) and Number("NA") === NaN both
+    // violate nulls-stay-null and corrupt latest-month selection downstream.
+    const csv = [
+      `${METRO_HEADER},2025-03-31,2025-04-30,2025-05-31`,
+      `394913,1,"New York, NY",msa,NY,600000, ,NA`,
+    ].join("\n");
+    const row = parseCsv(csv).rows[0];
+    expect(row.values["2025-03-31"]).toBe(600000);
+    expect(row.values["2025-04-30"]).toBeNull(); // whitespace-only → null, not 0
+    expect(row.values["2025-05-31"]).toBeNull(); // "NA" → null, not NaN
+  });
 });
 
 describe("toRegionSeries — melt wide→long", () => {

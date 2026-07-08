@@ -46,8 +46,16 @@ export function parseCsv(text: string): ParsedCsv {
     const values: Record<string, number | null> = {};
     header.forEach((col, i) => {
       const cell = cells[i] ?? "";
-      if (DATE_COL.test(col)) values[col] = cell === "" ? null : Number(cell);
-      else meta[col] = cell;
+      if (DATE_COL.test(col)) {
+        // Nulls stay null (constitution/ADR-0004). A blank, whitespace-only, or
+        // non-numeric cell ("NA") is missing data — NEVER coerce it: Number(" ")
+        // is 0 (a fabricated value) and Number("NA") is NaN (serializes as null
+        // but reads as present in latest-month selection). Only a finite number
+        // survives; everything else is null (finding #3).
+        const trimmed = cell.trim();
+        const n = trimmed === "" ? NaN : Number(trimmed);
+        values[col] = Number.isFinite(n) ? n : null;
+      } else meta[col] = cell;
     });
     return { meta, values };
   });
