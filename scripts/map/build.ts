@@ -13,7 +13,10 @@ import type { LatestJson } from "../../src/etl/serialize";
 
 const fixtures = process.argv.includes("--fixtures");
 const latestPath = fixtures ? "tests/golden/latest.json" : "data/latest.json";
-const OUT = "data/map/metro-map.svg";
+// Distinct outputs per source (finding #12): the fixture SVG is the committed,
+// CI-byte-diffed artifact; a Phase D live build must NOT overwrite it. Keep them
+// in separate files so `map:build` (live) can never redden the fixture gate.
+const OUT = fixtures ? "data/map/metro-map.svg" : "data/map/metro-map.live.svg";
 
 // P2R bins (years of gross rent to equal price). Thresholds are stable, round
 // numbers; class → color mapping is a Phase C.1 styling concern.

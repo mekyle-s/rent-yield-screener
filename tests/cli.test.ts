@@ -113,7 +113,9 @@ describe("map:verify latest.json read (finding #8 — honors MAP_VERIFY: contrac
     renameSync(SVG, BAK);
     writeFileSync(SVG, live);
     try {
-      const r = runCli(MAP_VERIFY, []);
+      // --fixtures reads the committed data/map/metro-map.svg (now re-tagged live),
+      // so its data-source drives the read of the missing data/latest.json.
+      const r = runCli(MAP_VERIFY, ["--fixtures"]);
       expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(1);
       expect(r.stderr).toContain("MAP_VERIFY:");
       expect(r.stderr).not.toMatch(/at .*\.ts:\d+/); // no raw stack trace

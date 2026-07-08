@@ -21,3 +21,8 @@ Thumbs.db
 
 # raw Zillow downloads — never committed (constitution V: no raw-dataset redistribution)
 .cache/
+
+# live map build output (Phase D) — the committed CI-diffed artifact is the
+# fixture SVG; the live build writes here so it can't clobber it (finding #12)
+/data/map/metro-map.live.svg
+/data/latest.json

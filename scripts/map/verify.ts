@@ -5,7 +5,10 @@
 // from (data-source attribute), and every path carries a fill class + data-region-id.
 import { readFileSync } from "node:fs";
 
-const SVG = "data/map/metro-map.svg";
+// Match build.ts's per-source outputs (finding #12): --fixtures verifies the
+// committed fixture artifact; without it, the Phase D live SVG.
+const fixtures = process.argv.includes("--fixtures");
+const SVG = fixtures ? "data/map/metro-map.svg" : "data/map/metro-map.live.svg";
 
 function die(reason: string): never {
   process.stderr.write(`MAP_VERIFY: ${reason}\n`);

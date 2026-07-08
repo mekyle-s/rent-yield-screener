@@ -28,7 +28,7 @@ jobs:
       - name: Map determinism — rebuild SVG on fixtures and diff committed copy
         run: |
           npm run map:build -- --fixtures
-          npm run map:verify
+          npm run map:verify -- --fixtures
           git diff --exit-code data/map/metro-map.svg
       - name: Build
         run: npm run build
