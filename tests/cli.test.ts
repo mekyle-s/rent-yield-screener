@@ -12,6 +12,7 @@ const ROOT = process.cwd();
 const VALIDATE = join(ROOT, "scripts/etl/validate.ts");
 const BUILD_CROSSWALK = join(ROOT, "scripts/etl/build-crosswalk.ts");
 const MAP_VERIFY = join(ROOT, "scripts/map/verify.ts");
+const FETCH = join(ROOT, "scripts/etl/fetch.ts");
 
 // Run a CLI via tsx. Returns { status, stdout, stderr }. Never throws on non-zero exit.
 function runCli(script: string, args: string[], cwd = ROOT) {
@@ -75,6 +76,26 @@ describe("etl:validate threshold parsing (finding #5)", () => {
     // if either is ignored the default trips ROWCOUNT_ANOMALY. Passing proves it.
     const r = withLatest(["--min-metros=5", "--min-zips=10"]);
     expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(0);
+  });
+});
+
+describe("etl:fetch floating-promise contract (finding #9)", () => {
+  it("emits FETCH_INTEGRITY: on a main() rejection, not a raw stack trace", () => {
+    // main() was called with no .catch, so any rejection outside fail() (e.g. the
+    // unguarded res.text(), or an I/O error) escaped as an unhandled rejection.
+    // Force one offline: --out under an existing FILE makes mkdirSync throw ENOTDIR
+    // before any network call.
+    const dir = mkdtempSync(join(tmpdir(), "rys-fetch-"));
+    const filePath = join(dir, "afile");
+    writeFileSync(filePath, "x");
+    try {
+      const r = runCli(FETCH, ["--out", join(filePath, "sub")]);
+      expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).not.toBe(0);
+      expect(r.stderr).toContain("FETCH_INTEGRITY:");
+      expect(r.stderr).not.toMatch(/at .*\.ts:\d+/); // no raw stack trace
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

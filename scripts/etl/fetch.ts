@@ -49,7 +49,13 @@ async function fetchOne(
   const contentType = res.headers.get("content-type") ?? "";
   if (!/text\/csv|application\/octet-stream|text\/plain/.test(contentType))
     fail(url, `unexpected content-type "${contentType}"`);
-  const body = await res.text();
+  let body: string;
+  try {
+    body = await res.text();
+  } catch (e) {
+    // A mid-body connection reset rejects here, outside the fetch() try (finding #9).
+    fail(url, `body read failed (${(e as Error).message})`);
+  }
   if (body.length === 0) fail(url, "empty body");
   if (expectedHeader && !body.startsWith(expectedHeader))
     fail(
@@ -87,4 +93,6 @@ async function main() {
   }
 }
 
-main();
+// Never let a rejection escape as an unhandled promise (finding #9): any error
+// outside a fail() call (I/O, an unforeseen throw) must still speak the token.
+main().catch((e) => fail("(none)", `unexpected error (${(e as Error).message})`));
