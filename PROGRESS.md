@@ -5,21 +5,21 @@
 # Progress — Rent-Yield Screener
 
 ## Active task
-**PHASE B EXIT BLOCKED** — code review (reviews/phase-b-code-review.md) returned 10 blocking findings; fixes 1–10 required before the exit checkpoint.
+**PHASE B EXIT — FIXES DONE, CI GREEN, AWAITING CHECKPOINT.** All 10 blocking review findings + the 2 flagged below-cap items are fixed (12 atomic commits, one per finding, each with a test-first regression). Full Phase B AC suite re-run locally (all green), double-run determinism byte-identical, pushed, CI green (run 28921364959, exit 0). Stopped before the exit checkpoint per instructions.
 
-Blocking findings (full detail + failure scenarios in reviews/phase-b-code-review.md):
-1. scripts/map/build.ts:41 — BLOCKER: SVG polygons rendered as spherical complements (RFC 7946 winding vs d3-geo); committed map is visually garbage; map:verify blind to geometry
-2. scripts/etl/validate.ts:39 — default validate mode exits 0 with zero inputs (vacuous pass)
-3. src/etl/csv.ts:49 — Number(" ")→0 / Number("NA")→NaN breaks nulls-stay-null + latest-month selection
-4. scripts/etl/build-crosswalk.ts:27 — generator invariant weaker than crosswalk test (CBSA global uniqueness)
-5. scripts/etl/validate.ts:16 — NaN thresholds silently disable ROWCOUNT_ANOMALY; --flag=value form ignored
-6. src/etl/validate.ts:70 — median([]) = NaN silently passes the ZIP distribution check
-7. src/etl/csv.ts:39 — 0-byte CSV crashes parseCsv with opaque TypeError, no error token
-8. scripts/map/verify.ts:25 — unguarded latest.json read breaks the MAP_VERIFY: token contract
-9. scripts/etl/fetch.ts:90 — floating main() promise escapes the FETCH_INTEGRITY: contract
-10. src/etl/transform.ts:43 — national-row filter keys on SizeRank not RegionID/RegionType (hardening)
+Findings — all FIXED (regression test → fix → atomic commit each; see git log fa78ca3..HEAD):
+1. ✅ d424071 — winding fixed at source (build-boundaries.ts `-o gj2008` = CW/d3 rings) + map:verify geometry guard (no path bbox may span the viewBox) + tests/map.test.ts
+2. ✅ 9f7d8a2 — validate default mode dies FETCH_INTEGRITY: on zero inputs (no vacuous pass)
+3. ✅ ede3d0f — csv cells: trim, keep only finite Number, else null (" "→null, "NA"→null)
+4. ✅ c4c15f4 — crosswalk generator enforces CBSA global uniqueness (1:1 both ways); --src/--out added
+5. ✅ 71d36b2 — num() rejects NaN thresholds; flag() honors --flag=value
+6. ✅ e64eb00 — median() throws on empty; distribution check skipped for zero zips
+7. ✅ e47eb46 — parseCsv throws clear error on empty/headerless file
+8. ✅ 7945d31 — map:verify latest.json read guarded → MAP_VERIFY: token
+9. ✅ 39c5902 — fetch.ts res.text() guarded + main().catch(fail) → FETCH_INTEGRITY:
+10. ✅ f472e71 — national row excluded by RegionID 102001 / RegionType country, not SizeRank
 
-Also fix alongside (below-cap but determinism/CI-relevant): trim-fixtures.ts:75 localeCompare sort; build.ts:16 fixture/live builds share the CI-diffed output path.
+Below-cap, fixed alongside: 11 ✅ be62d8a (trim-fixtures lexical sort, not localeCompare); 12 ✅ 3653981 (fixture vs live map builds write DISTINCT files — committed metro-map.svg vs gitignored metro-map.live.svg; map:verify + CI + ROADMAP B.4 AC + .gitignore updated). Findings 13–21 remain queued (Phase 5 hardening / cheap cleanup) — see reviews/phase-b-code-review.md.
 
 ## Status
 **PHASE B IN PROGRESS at Rung 1 (watched).** B.1 ✅ (2026-07-07). Phase B plan approved with 5 notes: (1) invalid fixtures → tests/fixtures/invalid/ [ROADMAP amended]; (2) B.2 CI AC via `gh run watch --exit-status` [amended]; (3) B.4 map:verify exact output contract `PATHS=<n> JOINED=<n> OK` / `MAP_VERIFY:` stderr [amended]; (4) crosswalk source + coverage stated to Mekyle BEFORE building, unmatched list shown, never silent drops; (5) /code-review on full phase diff before Phase B exit checkpoint.
@@ -28,7 +28,7 @@ Also fix alongside (below-cap but determinism/CI-relevant): trim-fixtures.ts:75 
 2026-07-07: B.3 + B.4 done same session (all ACs green, CI green each push). B.3: validators test-first, RATIO_RANGE = distribution check (Mekyle-approved: metro hard [5,60], ZIP finite+positive with median in [5,60]). B.4: crosswalk from Zillow's own CountyCrossWalk_Zillow.csv (ID concordance, no name-matching, 894/894 live coverage, 0 unmatched — note-4 statement given); cb_2023 boundaries 935 features committed; map:build/map:verify meet the exact amended contract (PATHS=15 JOINED=15 OK; corruption test correctly named the missing metro). Security: mapshaper's file-type advisories killed via npm override file-type@22.0.1 — npm audit 0 vulns, conversion verified post-override.
 
 ## Next action
-Fix review findings 1–10 (+ the two flagged below-cap items), test-first where a failing test can encode the bug (esp. #1: map:verify geometry guard — no path bbox may span the full viewBox — must fail BEFORE the winding fix and pass after). Re-run all Phase B ACs + full CI, then present the exit checkpoint to Mekyle.
+Present the Phase B exit checkpoint to Mekyle. Evidence: all B.1–B.4 ACs pass locally (fetch --dry-run 4 URLs; fixture count 4; transform 21 tests; golden diff clean; bad-schema → SCHEMA_VIOLATION: exit 1; fetch 404 → FETCH_INTEGRITY: exit 1; map PATHS=15 JOINED=15 OK), npm test 50 pass, npm run check 0/0/0, double-run ETL + map byte-identical, CI run 28921364959 green (--exit-status 0). On approval → Phase C (C.1 blocked by B.2+B.4, now unblocked).
 
 ## Learnings / guardrails
 - ETL determinism is constitutional (VI): always compare double-run outputs with `diff -r` before claiming done.
