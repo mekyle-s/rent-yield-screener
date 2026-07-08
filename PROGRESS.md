@@ -5,7 +5,7 @@
 # Progress — Rent-Yield Screener
 
 ## Active task
-**PHASE B EXIT — FIXES DONE, CI GREEN, AWAITING CHECKPOINT.** All 10 blocking review findings + the 2 flagged below-cap items are fixed (12 atomic commits, one per finding, each with a test-first regression). Full Phase B AC suite re-run locally (all green), double-run determinism byte-identical, pushed, CI green (run 28921364959, exit 0). Stopped before the exit checkpoint per instructions.
+**PHASE B EXIT — FIXES DONE, RE-REVIEWED, CI GREEN, AWAITING CHECKPOINT.** All 10 blocking review findings + 2 flagged below-cap items fixed (test-first, one atomic commit each). A single-pass correctness re-review of the fix diff (40cae46..HEAD, no swarm) found ONE new gap — now fixed (c9c9c16): the finding-#5 `--flag=value` support let the csvPaths filter swallow a positional CSV path after an equals-form flag (e.g. `--min-metros=500 file.csv`), silently entering default mode and validating the wrong files at exit 0. Regression test + one-line fix. Full AC suite + npm test (51) + check (0/0/0) + double-run determinism green; CI green (run 28923538522, exit 0, sha c9c9c16). Stopped before the exit checkpoint per instructions.
 
 Findings — all FIXED (regression test → fix → atomic commit each; see git log fa78ca3..HEAD):
 1. ✅ d424071 — winding fixed at source (build-boundaries.ts `-o gj2008` = CW/d3 rings) + map:verify geometry guard (no path bbox may span the viewBox) + tests/map.test.ts
@@ -28,7 +28,8 @@ Below-cap, fixed alongside: 11 ✅ be62d8a (trim-fixtures lexical sort, not loca
 2026-07-07: B.3 + B.4 done same session (all ACs green, CI green each push). B.3: validators test-first, RATIO_RANGE = distribution check (Mekyle-approved: metro hard [5,60], ZIP finite+positive with median in [5,60]). B.4: crosswalk from Zillow's own CountyCrossWalk_Zillow.csv (ID concordance, no name-matching, 894/894 live coverage, 0 unmatched — note-4 statement given); cb_2023 boundaries 935 features committed; map:build/map:verify meet the exact amended contract (PATHS=15 JOINED=15 OK; corruption test correctly named the missing metro). Security: mapshaper's file-type advisories killed via npm override file-type@22.0.1 — npm audit 0 vulns, conversion verified post-override.
 
 ## Next action
-Present the Phase B exit checkpoint to Mekyle. Evidence: all B.1–B.4 ACs pass locally (fetch --dry-run 4 URLs; fixture count 4; transform 21 tests; golden diff clean; bad-schema → SCHEMA_VIOLATION: exit 1; fetch 404 → FETCH_INTEGRITY: exit 1; map PATHS=15 JOINED=15 OK), npm test 50 pass, npm run check 0/0/0, double-run ETL + map byte-identical, CI run 28921364959 green (--exit-status 0). On approval → Phase C (C.1 blocked by B.2+B.4, now unblocked).
+Present the Phase B exit checkpoint to Mekyle (fix pass + re-review both complete). Evidence: all B.1–B.4 ACs pass locally (fetch --dry-run 4 URLs; fixture count 4; transform 21 tests; golden diff clean; bad-schema → SCHEMA_VIOLATION: exit 1; fetch 404 → FETCH_INTEGRITY: exit 1; map PATHS=15 JOINED=15 OK), npm test 51 pass, npm run check 0/0/0, double-run ETL + map byte-identical, CI run 28923538522 green (--exit-status 0, sha c9c9c16). On approval → Phase C (C.1 blocked by B.2+B.4, now unblocked).
+- NEW GUARDRAIL (Mekyle, 2026-07-08): before launching >5 subagents OR any full-codebase/full-phase review, state estimated scope and WAIT for approval (saved to memory: subagent-scope-approval).
 
 ## Learnings / guardrails
 - ETL determinism is constitutional (VI): always compare double-run outputs with `diff -r` before claiming done.
