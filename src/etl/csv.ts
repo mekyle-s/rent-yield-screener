@@ -35,7 +35,11 @@ export function splitCsvLine(line: string): string[] {
 }
 
 export function parseCsv(text: string): ParsedCsv {
-  const lines = text.replace(/\r\n/g, "\n").split("\n").filter((l) => l.length > 0);
+  const lines = text.replace(/\r\n/g, "\n").split("\n").filter((l) => l.trim().length > 0);
+  // Fail fast on an empty/headerless file (finding #7): the etl runner bypasses
+  // validateCsvSchema, so a 0-byte cached CSV otherwise crashed with an opaque
+  // TypeError deep in splitCsvLine(undefined).
+  if (lines.length === 0) throw new Error("parseCsv: empty file or missing header row");
   const header = splitCsvLine(lines[0]);
   const metaCols = header.filter((c) => !DATE_COL.test(c));
   const dateCols = header.filter((c) => DATE_COL.test(c));

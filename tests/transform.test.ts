@@ -61,6 +61,13 @@ describe("parseCsv — column detection & cell parsing", () => {
     expect(la.values["2025-04-30"]).toBe(905000);
   });
 
+  it("throws a clear error on an empty/headerless file, not an opaque TypeError (finding #7)", () => {
+    // The etl runner bypasses validateCsvSchema, so a 0-byte cached CSV used to
+    // crash deep in splitCsvLine(undefined). Fail fast with an intelligible message.
+    expect(() => parseCsv("")).toThrow(/empty|header/i);
+    expect(() => parseCsv("   \n")).toThrow(/empty|header/i);
+  });
+
   it("parses non-numeric data cells as null, never 0 or NaN (finding #3)", () => {
     // Number(" ") === 0 (a fabricated value) and Number("NA") === NaN both
     // violate nulls-stay-null and corrupt latest-month selection downstream.
