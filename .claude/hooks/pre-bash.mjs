@@ -76,7 +76,8 @@ function checkPush(tokens, loop) {
     deny(
       "bulk push (--all/--branches) may include main — loop iterations push their claude/* branch explicitly (CLAUDE_LOOP=1)",
     );
-  const nonFlags = after.filter((t) => !t.startsWith("-"));
+  // F4 (T7.5): strip ordinary quoting before refspec evaluation
+  const nonFlags = after.map(stripQuotes).filter((t) => !t.startsWith("-"));
   // first non-flag token is the remote; refspecs follow
   const refspecs = nonFlags.slice(1);
   if (force && refspecs.length === 0)
@@ -118,7 +119,8 @@ function checkDelete(tokens) {
           if (/f/.test(tok)) force = true;
         }
       } else {
-        paths.push(tok);
+        // F4 (T7.5): strip ordinary quoting before the dangerous() checks
+        paths.push(stripQuotes(tok));
       }
     }
     const dangerous = (p) =>

@@ -119,6 +119,14 @@ describe("pre-bash.mjs — ALWAYS deny, any mode", () => {
       /mirror|force|bulk/i,
     ],
     ["git push --force --all", "git push --force --all origin", /force|bulk/i],
+    // T7.5 finding 4: ordinary quoting must not dodge path/refspec checks
+    ["rm -rf quoted absolute", 'rm -rf "/etc/something"', /rm|remove-item/i],
+    [
+      "Remove-Item quoted drive path",
+      'Remove-Item -Recurse -Force "C:\\Users\\other"',
+      /rm|remove-item/i,
+    ],
+    ["force-push quoted main", 'git push --force origin "main"', /force/i],
     // PowerShell recursive+force deletes outside the repo (matcher covers PowerShell)
     [
       "Remove-Item -Recurse -Force absolute",
@@ -240,6 +248,8 @@ describe("pre-bash.mjs — deny ONLY when CLAUDE_LOOP=1 (any push refspec target
     ["delete :refs/heads/main (full ref)", "git push origin :refs/heads/main"],
     // T7.5 finding 3: non-force bulk push may carry main — loop-only deny
     ["push --all (bulk, may include main)", "git push --all origin"],
+    // T7.5 finding 4: quoted refspec
+    ["push quoted main", 'git push origin "main"'],
   ];
   for (const [name, cmd] of loopOnlyDeny) {
     it(`[loop] denies ${name}`, () => {
