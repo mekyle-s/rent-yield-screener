@@ -4,12 +4,7 @@
 // When CLAUDE_LOOP=1, writes to .claude/**, scripts/loop/**, and .github/** are
 // denied (exit 2). Attended sessions are unaffected. Fail-closed (A1).
 import { readFileSync } from "node:fs";
-
-const PROTECTED = [
-  /(^|\/)\.claude(\/|$)/,
-  /(^|\/)scripts\/loop(\/|$)/,
-  /(^|\/)\.github(\/|$)/,
-];
+import { isProtectedPath } from "./protected.mjs";
 
 try {
   const data = JSON.parse(readFileSync(0, "utf8"));
@@ -20,8 +15,7 @@ try {
     process.stderr.write("HOOK_ERROR: fail-closed\n");
     process.exit(2);
   }
-  const normalized = filePath.replace(/\\/g, "/");
-  if (PROTECTED.some((re) => re.test(normalized))) {
+  if (isProtectedPath(filePath)) {
     process.stderr.write(
       `BLOCKED: ${filePath} is protected guardrail infrastructure (.claude/**, scripts/loop/**, .github/**) — the loop may not edit its own guardrails (CLAUDE_LOOP=1)\n`,
     );

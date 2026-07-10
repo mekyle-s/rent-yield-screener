@@ -160,6 +160,53 @@ describe("pre-bash.mjs — ALWAYS deny, any mode", () => {
   }
 });
 
+// T7.5 finding 1: Bash-side writes/deletes to guardrail dirs must be denied in
+// loop mode (pre-edit.mjs only covers the Edit|Write tools)
+describe("pre-bash.mjs — F1: loop-mode guardrail writes via Bash", () => {
+  const loopDeny: Array<[string, string]> = [
+    ["plain rm of a hook", "rm .claude/hooks/pre-bash.mjs"],
+    ["rm -f of loop driver", "rm -f scripts/loop/loop.sh"],
+    ["redirect into settings.json", "echo x > .claude/settings.json"],
+    ["append into CI workflow", "echo x >> .github/workflows/ci.yml"],
+    ["attached redirect", "echo x >.claude/settings.json"],
+    [
+      "sed -i on a hook",
+      "sed -i 's/exit(2)/exit(0)/' .claude/hooks/pre-bash.mjs",
+    ],
+    ["mv over a hook", "mv payload.mjs .claude/hooks/pre-bash.mjs"],
+    ["cp over PROMPT.md", "cp other.md scripts/loop/PROMPT.md"],
+    ["tee into a workflow", "tee .github/workflows/ci.yml"],
+    ["touch inside .claude", "touch .claude/hooks/new-hook.mjs"],
+  ];
+  for (const [name, cmd] of loopDeny) {
+    it(`[loop] denies ${name}`, () => {
+      const r = runHook("pre-bash.mjs", bash(cmd), { loop: true });
+      expect(r.status).toBe(2);
+      expect(r.stderr).toMatch(/guardrail|protected/i);
+    });
+  }
+  const loopAllow: Array<[string, string]> = [
+    ["reading settings.json", "cat .claude/settings.json"],
+    ["git show of a hook", "git show HEAD:.claude/hooks/pre-bash.mjs"],
+    ["redirect to normal file", "echo x > notes.txt"],
+    ["rm of normal file", "rm scratch.txt"],
+    ["sed -i on product source", "sed -i 's/a/b/' src/etl/transform.ts"],
+  ];
+  for (const [name, cmd] of loopAllow) {
+    it(`[loop] allows ${name}`, () => {
+      expect(runHook("pre-bash.mjs", bash(cmd), { loop: true }).status).toBe(0);
+    });
+  }
+  it("[attended] allows sed -i on a hook (self-protection is loop-only)", () => {
+    expect(
+      runHook(
+        "pre-bash.mjs",
+        bash("sed -i 's/a/b/' .claude/hooks/pre-bash.mjs"),
+      ).status,
+    ).toBe(0);
+  });
+});
+
 describe("pre-bash.mjs — deny ONLY when CLAUDE_LOOP=1 (any push refspec targeting main)", () => {
   const loopOnlyDeny: Array<[string, string]> = [
     ["push origin main", "git push origin main"],
