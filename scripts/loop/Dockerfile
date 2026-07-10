@@ -21,3 +21,8 @@ RUN npm install -g @anthropic-ai/claude-code@2.1.206
 
 COPY entry.sh /entry.sh
 RUN chmod +x /entry.sh
+
+# claude refuses --dangerously-skip-permissions as root (found by T7 smoke);
+# run iterations as the image's non-root pwuser with a pre-owned workdir
+RUN mkdir -p /work && chown pwuser:pwuser /work
+USER pwuser
