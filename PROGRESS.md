@@ -6,7 +6,7 @@
 
 ## Active task
 
-**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅; next = T3 (Prettier = Rung 2 trial via /goal).** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
+**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅ T3 ✅ (RUNG 2 TRIAL PASSED); next = T4 (main ruleset).** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
 
 <details><summary>Phase B fix-pass record (all findings FIXED; test-first → fix → atomic commit each; git log fa78ca3..c9c9c16)</summary>
 1. ✅ d424071 — winding fixed at source (build-boundaries.ts `-o gj2008` = CW/d3 rings) + map:verify geometry guard (no path bbox may span the viewBox) + tests/map.test.ts
@@ -42,7 +42,9 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 
 ## Next action
 
-**T3 — Prettier rollout = designated Rung 2 trial, via /goal, Mekyle at desk.** Goal condition: `npx prettier --check .` exits 0 AND CI green including golden-diff + map-diff steps. Scope: prettier devDep + `.prettierignore` (`data/`, `tests/golden/`, `tests/fixtures/`, `dist/`) + one-time reformat commit + CI check step + wire post-edit.mjs into settings.json. NOTE: an editor format-on-save diff to `src/etl/transform.ts` (pure formatting, Mekyle's editor) is sitting uncommitted in the working tree — T3's reformat commit absorbs it. Then T4 (ruleset), T5 (image), T6 (SUPERVISED credentials), T7 (loop.sh), T7.5 (scoped review gate, scope estimate + approval first), T8 (dry-run), T9 (close-out).
+**T4 — minimal main ruleset via `gh api`** (block force-push `non_fast_forward` + block deletion; deliberately NO require-PR). AC: `gh api repos/mekyle-s/rent-yield-screener/rulesets` lists both rules; `git push origin :main` → rejected. Then T5 (image), T6 (SUPERVISED credentials), T7 (loop.sh), T7.5 (scoped review gate, scope estimate + approval first), T8 (dry-run), T9 (close-out).
+
+**T3 record — RUNG 2 TRIAL PASSED (2026-07-10, /goal session, Mekyle at desk).** Goal condition met exactly: `npx prettier --check .` → "All matched files use Prettier code style!", exit 0; CI run on 2340c28 green END-TO-END including golden-diff (✓ ETL determinism) and map-diff (✓ Map determinism) — the one-time reformat (40 files incl. Mekyle's editor diff to transform.ts) provably touched zero snapshot bytes. Local pre-push battery: 161 tests, check 0 errors, `diff -r /tmp/t3-out tests/golden/` clean, SVG rebuild byte-identical. prettier 3.9.5 + prettier-plugin-astro 0.14.1 exact-pinned (plugin = stated scope addition: `--check .` cannot pass on .astro files without it). post-edit.mjs wired + live-verified: ugly probe file came back Prettier-formatted on disk via PostToolUse.
 
 - GUARDRAIL (Mekyle, 2026-07-08): before launching >5 subagents OR any full-codebase/full-phase review, state estimated scope and WAIT for approval (saved to memory: subagent-scope-approval).
 
