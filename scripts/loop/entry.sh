@@ -14,7 +14,11 @@ case "$BRANCH" in
 esac
 
 REPO="mekyle-s/rent-yield-screener"
-git clone --quiet "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" /work
+
+# F6 (T7.5): the PAT is NEVER written into the clone URL or .git/config. gh's
+# git credential helper supplies it from $GH_TOKEN at transport time only.
+gh auth setup-git
+git clone --quiet "https://github.com/${REPO}.git" /work
 cd /work
 git config user.name "${GIT_AUTHOR_NAME:-claude-loop}"
 git config user.email "${GIT_AUTHOR_EMAIL:-claude-loop@users.noreply.github.com}"
@@ -27,10 +31,12 @@ npm ci --no-audit --no-fund
 BEFORE=$(git rev-parse HEAD)
 
 # CLAUDE_LOOP=1 arms the loop-only guards (pre-bash push-to-main block,
-# pre-edit guardrail write block, stop-tests dirty-tree block)
+# pre-edit guardrail write block, stop-tests dirty-tree block).
+# F6 (T7.5): the model runs with GH_TOKEN scrubbed from its environment —
+# least privilege; the driver still holds it for the post-iteration push.
 export CLAUDE_LOOP=1
 set +e
-claude -p "$(cat scripts/loop/PROMPT.md)" \
+env -u GH_TOKEN claude -p "$(cat scripts/loop/PROMPT.md)" \
   --model sonnet \
   --max-turns 80 \
   --dangerously-skip-permissions
