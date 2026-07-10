@@ -21,14 +21,18 @@ const WRITE_CMD =
 
 function checkProtectedWrite(tokens, cmd, loop) {
   if (!loop) return;
-  const redirect = cmd.match(/>>?\s*(\S+)/);
-  if (redirect && isProtectedPath(stripQuotes(redirect[1])))
-    deny(
-      "loop iterations may not write to protected guardrail paths (.claude/**, scripts/loop/**, .github/**) — redirect target (CLAUDE_LOOP=1)",
-    );
+  // re-review fix: scan EVERY redirect in the command, not just the first —
+  // `echo a > safe && echo b > .claude/x` hid the malicious redirect behind
+  // an innocent one. `>>?` also catches fd-prefixed forms (`2> .claude/x`).
+  for (const m of cmd.matchAll(/>>?\s*(\S+)/g)) {
+    if (isProtectedPath(stripQuotes(m[1])))
+      deny(
+        "loop iterations may not write to protected guardrail paths (.claude/**, scripts/loop/**, .github/**) — redirect target (CLAUDE_LOOP=1)",
+      );
+  }
   const hasWriter = tokens.some((t) => WRITE_CMD.test(baseName(t)));
   if (!hasWriter) return;
-  if (tokens.some((t) => isProtectedPath(stripQuotes(t))))
+  if (tokens.some((t) => isProtectedPath(t)))
     deny(
       "loop iterations may not modify protected guardrail paths (.claude/**, scripts/loop/**, .github/**) (CLAUDE_LOOP=1)",
     );
@@ -76,8 +80,8 @@ function checkPush(tokens, loop) {
     deny(
       "bulk push (--all/--branches) may include main — loop iterations push their claude/* branch explicitly (CLAUDE_LOOP=1)",
     );
-  // F4 (T7.5): strip ordinary quoting before refspec evaluation
-  const nonFlags = after.map(stripQuotes).filter((t) => !t.startsWith("-"));
+  // tokens already quote-stripped up front (see main block)
+  const nonFlags = after.filter((t) => !t.startsWith("-"));
   // first non-flag token is the remote; refspecs follow
   const refspecs = nonFlags.slice(1);
   if (force && refspecs.length === 0)
@@ -122,8 +126,7 @@ function checkDelete(tokens) {
           if (/f/.test(tok)) force = true;
         }
       } else {
-        // F4 (T7.5): strip ordinary quoting before the dangerous() checks
-        paths.push(stripQuotes(tok));
+        paths.push(tok);
       }
     }
     const dangerous = (p) =>
@@ -162,7 +165,11 @@ try {
   )
     deny("curl/wget/iwr/irm piped into a shell (pipe-to-shell)");
 
-  const tokens = cmd.split(/\s+/).filter(Boolean);
+  // re-review fix: strip quotes from EVERY token once, up front, so quoting
+  // can't dodge flag classification (`"--force"`, `"-rf"`, `"--mirror"`) the way
+  // it previously dodged only path/refspec value comparisons. Separators
+  // (&&, ||, ;, |) and redirects carry no quotes and pass through unchanged.
+  const tokens = cmd.split(/\s+/).filter(Boolean).map(stripQuotes);
   checkProtectedWrite(tokens, cmd, loop);
   checkDelete(tokens);
   checkPush(tokens, loop);

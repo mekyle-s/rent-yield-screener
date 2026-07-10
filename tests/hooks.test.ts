@@ -140,6 +140,24 @@ describe("pre-bash.mjs — ALWAYS deny, any mode", () => {
       "Get-ChildItem C:\\Users\\other -Recurse | Remove-Item -Recurse -Force",
       /rm|remove-item|unauditable|pipe/i,
     ],
+    // T7.5 re-review: quoting must not dodge FLAG classification either
+    // (first fix pass stripped quotes at value sites only)
+    ["quoted --force flag to main", 'git push "--force" origin main', /force/i],
+    [
+      "quoted --mirror flag",
+      'git push "--mirror" origin',
+      /mirror|force|bulk/i,
+    ],
+    [
+      "quoted -rf flags outside repo",
+      'rm "-rf" /etc/something',
+      /rm|remove-item/i,
+    ],
+    [
+      "quoted PS flags outside repo",
+      'Remove-Item "-Recurse" "-Force" C:\\Users\\other',
+      /rm|remove-item/i,
+    ],
     // PowerShell recursive+force deletes outside the repo (matcher covers PowerShell)
     [
       "Remove-Item -Recurse -Force absolute",
@@ -211,6 +229,13 @@ describe("pre-bash.mjs — F1: loop-mode guardrail writes via Bash", () => {
     ["cp over PROMPT.md", "cp other.md scripts/loop/PROMPT.md"],
     ["tee into a workflow", "tee .github/workflows/ci.yml"],
     ["touch inside .claude", "touch .claude/hooks/new-hook.mjs"],
+    // T7.5 re-review: only the FIRST redirect in the command was inspected
+    [
+      "second-segment redirect into a hook",
+      "echo hi > safe.txt && echo bad > .claude/hooks/pre-bash.mjs",
+    ],
+    ["fd-prefixed redirect into a hook", "node x 2> .claude/settings.json"],
+    ["quoted redirect target", 'echo x > ".claude/settings.json"'],
   ];
   for (const [name, cmd] of loopDeny) {
     it(`[loop] denies ${name}`, () => {
