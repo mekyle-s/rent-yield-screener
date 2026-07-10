@@ -112,6 +112,13 @@ describe("pre-bash.mjs — ALWAYS deny, any mode", () => {
       "git push --force origin HEAD:refs/heads/main",
       /force/i,
     ],
+    // T7.5 finding 3: bulk pushes with force semantics, any mode
+    [
+      "git push --mirror (implicitly forced bulk)",
+      "git push --mirror origin",
+      /mirror|force|bulk/i,
+    ],
+    ["git push --force --all", "git push --force --all origin", /force|bulk/i],
     // PowerShell recursive+force deletes outside the repo (matcher covers PowerShell)
     [
       "Remove-Item -Recurse -Force absolute",
@@ -231,6 +238,8 @@ describe("pre-bash.mjs — deny ONLY when CLAUDE_LOOP=1 (any push refspec target
     ],
     ["push refs/heads/main (full ref)", "git push origin refs/heads/main"],
     ["delete :refs/heads/main (full ref)", "git push origin :refs/heads/main"],
+    // T7.5 finding 3: non-force bulk push may carry main — loop-only deny
+    ["push --all (bulk, may include main)", "git push --all origin"],
   ];
   for (const [name, cmd] of loopOnlyDeny) {
     it(`[loop] denies ${name}`, () => {
@@ -245,6 +254,7 @@ describe("pre-bash.mjs — ALLOW when attended (trunk-based Rung 2 + T3 goal dep
   const attendedAllow: Array<[string, string]> = [
     ["non-force push origin main", "git push origin main"],
     ["non-force push HEAD:main", "git push origin HEAD:main"],
+    ["non-force push --all (attended trunk workflow)", "git push --all origin"],
     ["push -u new claude branch", "git push -u origin claude/t1"],
     [
       "force-with-lease to claude/*",

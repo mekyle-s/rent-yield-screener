@@ -67,6 +67,15 @@ function checkPush(tokens, loop) {
   const force = after.some(
     (t) => t === "--force" || t === "-f" || t.startsWith("--force-with-lease"),
   );
+  // F3 (T7.5): bulk pushes have no refspec tokens, dodging every check below
+  if (after.includes("--mirror"))
+    deny(
+      "git push --mirror force-updates every ref (implicit force, bulk destinations) — never allowed",
+    );
+  if (loop && (after.includes("--all") || after.includes("--branches")))
+    deny(
+      "bulk push (--all/--branches) may include main — loop iterations push their claude/* branch explicitly (CLAUDE_LOOP=1)",
+    );
   const nonFlags = after.filter((t) => !t.startsWith("-"));
   // first non-flag token is the remote; refspecs follow
   const refspecs = nonFlags.slice(1);
