@@ -156,8 +156,17 @@ describe("serialize — deterministic latest.json", () => {
   const zhvi = toRegionSeries(parseCsv(zhviMetroCsv));
   const zori = toRegionSeries(parseCsv(zoriMetroCsv));
   const metro = computeP2R(zhvi, zori);
-  const emptyAudit = { joined: 0, zhviOnly: 0, zoriOnly: 0, zeroRent: 0, noSharedMonth: 0 };
-  const doc = buildLatestJson({ metro, zip: { records: [], audit: emptyAudit } });
+  const emptyAudit = {
+    joined: 0,
+    zhviOnly: 0,
+    zoriOnly: 0,
+    zeroRent: 0,
+    noSharedMonth: 0,
+  };
+  const doc = buildLatestJson({
+    metro,
+    zip: { records: [], audit: emptyAudit },
+  });
 
   it("snapshotMonth = lexical max of record months (YYYY-MM)", () => {
     expect(doc.meta.snapshotMonth).toBe("2025-05");
@@ -173,7 +182,10 @@ describe("serialize — deterministic latest.json", () => {
   it("is byte-identical across repeated runs (determinism, constitution VI)", () => {
     const again = serialize(
       buildLatestJson({
-        metro: computeP2R(toRegionSeries(parseCsv(zhviMetroCsv)), toRegionSeries(parseCsv(zoriMetroCsv))),
+        metro: computeP2R(
+          toRegionSeries(parseCsv(zhviMetroCsv)),
+          toRegionSeries(parseCsv(zoriMetroCsv)),
+        ),
         zip: { records: [], audit: emptyAudit },
       }),
     );
@@ -182,9 +194,16 @@ describe("serialize — deterministic latest.json", () => {
 });
 
 describe("full pipeline on committed fixtures", () => {
-  const load = (f: string) => parseCsv(readFileSync(`tests/fixtures/${f}`, "utf8"));
-  const metro = computeP2R(toRegionSeries(load("zhvi-metro.csv")), toRegionSeries(load("zori-metro.csv")));
-  const zip = computeP2R(toRegionSeries(load("zhvi-zip.csv")), toRegionSeries(load("zori-zip.csv")));
+  const load = (f: string) =>
+    parseCsv(readFileSync(`tests/fixtures/${f}`, "utf8"));
+  const metro = computeP2R(
+    toRegionSeries(load("zhvi-metro.csv")),
+    toRegionSeries(load("zori-metro.csv")),
+  );
+  const zip = computeP2R(
+    toRegionSeries(load("zhvi-zip.csv")),
+    toRegionSeries(load("zori-zip.csv")),
+  );
 
   it("metro fixture: 15 joined, 2 ZHVI-only, 1 ZORI-only, national row excluded", () => {
     expect(metro.audit).toMatchObject({ joined: 15, zhviOnly: 2, zoriOnly: 1 });

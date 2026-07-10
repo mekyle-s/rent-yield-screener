@@ -12,65 +12,75 @@ Duplicate candidates were merged: four independent finders converged on finding 
 ## Ranked findings (reported top 10)
 
 ### 1. BLOCKER — Choropleth SVG renders every polygon as its spherical complement
+
 `scripts/map/build.ts:41` · correctness · **CONFIRMED**
 
 mapshaper emits RFC 7946 (counterclockwise) ring winding; d3-geo treats such rings as the spherical complement. `build-boundaries.ts` never rewinds rings to d3's convention before `geoPath(feature)`. **Verifier evidence: all 15 of 15 `<path>` elements in the committed `data/map/metro-map.svg` begin with the geoAlbersUsa clip-extent rectangle `M-104,-4.4L1079,-4.4L1079,614.4L-104,614.4Z`** with the metro as a hole.
 
-*Failure:* every metro path fills the whole 975×610 canvas in its bin color; the last-drawn metro covers the entire US; every hover `<title>` covers the full map. `map:verify` only counts paths/attributes, so CI stays green and the broken map ships in Phase C.
+_Failure:_ every metro path fills the whole 975×610 canvas in its bin color; the last-drawn metro covers the entire US; every hover `<title>` covers the full map. `map:verify` only counts paths/attributes, so CI stays green and the broken map ships in Phase C.
 
-*Fix direction:* rewind rings for d3 convention (e.g. mapshaper `-o` with d3-compatible winding, or rewind in build.ts) **plus** a `map:verify` geometry guard (no path bbox may span the full viewBox) so this bug class can't pass silently again.
+_Fix direction:_ rewind rings for d3 convention (e.g. mapshaper `-o` with d3-compatible winding, or rewind in build.ts) **plus** a `map:verify` geometry guard (no path bbox may span the full viewBox) so this bug class can't pass silently again.
 
 ### 2. Validation gate can exit 0 having validated nothing
+
 `scripts/etl/validate.ts:39` · correctness · **CONFIRMED** (found independently by 4 finders)
 
 Default mode filters the 4 expected CSVs through `.filter(existsSync)` and only checks `data/latest.json` `if (existsSync(...))`. Zero inputs → prints nothing, exits 0.
 
-*Failure:* in the D.1 pipeline (`npm run etl:live && npm run etl:validate`), a cleared cache or a fetch that wrote elsewhere makes the B.3 gate pass vacuously — the monthly publish proceeds with unvalidated or nonexistent data instead of failing with an error token.
+_Failure:_ in the D.1 pipeline (`npm run etl:live && npm run etl:validate`), a cleared cache or a fetch that wrote elsewhere makes the B.3 gate pass vacuously — the monthly publish proceeds with unvalidated or nonexistent data instead of failing with an error token.
 
 ### 3. Non-numeric cells coerced to 0/NaN — violates nulls-stay-null
+
 `src/etl/csv.ts:49` · correctness · **CONFIRMED** (2 finders)
 
 `values[col] = cell === "" ? null : Number(cell)` — only the exact empty string becomes null. `Number(" ") === 0` (a fabricated value, contradicting the file's own header comment); `Number("NA")` is NaN, which `transform.ts:73`'s `!= null` month check treats as present, and `JSON.stringify` then serializes NaN as `null` in the output.
 
-*Failure:* a single `" "` cell in the latest ZORI month drops the region as zeroRent instead of falling back one month — the metro silently vanishes from latest.json and the map. A `"NA"` cell becomes the selected "latest shared month" with ratio NaN, failing the entire monthly refresh via RATIO_RANGE when a perfectly good earlier month existed.
+_Failure:_ a single `" "` cell in the latest ZORI month drops the region as zeroRent instead of falling back one month — the metro silently vanishes from latest.json and the map. A `"NA"` cell becomes the selected "latest shared month" with ratio NaN, failing the entire monthly refresh via RATIO_RANGE when a perfectly good earlier month existed.
 
 ### 4. Crosswalk generator enforces a weaker invariant than its committed test
+
 `scripts/etl/build-crosswalk.ts:27` · correctness · **CONFIRMED**
 
 The generator only rejects one-metro→multiple-CBSAs; `tests/crosswalk.test.ts:27` asserts globally unique CBSA codes (1:1 both directions).
 
-*Failure:* a future `CountyCrossWalk_Zillow.csv` with a duplicate/legacy metro ID for the same CBSA regenerates fine, then `npm test` fails the 1:1 assertion — red CI blocking the monthly refresh, with the generator's own guard having reported nothing.
+_Failure:_ a future `CountyCrossWalk_Zillow.csv` with a duplicate/legacy metro ID for the same CBSA regenerates fine, then `npm test` fails the 1:1 assertion — red CI blocking the monthly refresh, with the generator's own guard having reported nothing.
 
 ### 5. NaN thresholds silently disable the rowcount gate
+
 `scripts/etl/validate.ts:16` · correctness · **CONFIRMED**
 
 `num()` never rejects NaN: `--min-zips 5,000` → `Number("5,000") === NaN` → `doc.zips.length < NaN` is always false. The `--flag=value` equals form is also silently ignored by the space-separated `flag()` lookup (falls back to default).
 
-*Failure:* an operator typo disables ROWCOUNT_ANOMALY with no warning; a Zillow coverage collapse to 12 ZIPs validates OK.
+_Failure:_ an operator typo disables ROWCOUNT_ANOMALY with no warning; a Zillow coverage collapse to 12 ZIPs validates OK.
 
 ### 6. Empty-zips median is NaN — distribution check silently passes
+
 `src/etl/validate.ts:70` · correctness · **CONFIRMED**
 
 `median([])` returns `(s[-1] + s[0]) / 2 = NaN`; `NaN < lo || NaN > hi` is false.
 
-*Failure:* `etl:validate --latest <metro-only latest.json> --min-zips 0` (a legitimate V1 shape per ADR-0004) passes the median check having evaluated nothing.
+_Failure:_ `etl:validate --latest <metro-only latest.json> --min-zips 0` (a legitimate V1 shape per ADR-0004) passes the median check having evaluated nothing.
 
 ### 7. Empty CSV crashes parseCsv with an opaque TypeError
+
 `src/etl/csv.ts:39` · correctness · **CONFIRMED**
 
 0-byte file → `split("\n")` yields `[""]`, filter drops it, `lines[0]` is undefined → `splitCsvLine(undefined)` throws deep in the parser. The etl runner bypasses `validateCsvSchema` (which handles the empty case), so no error token is emitted.
 
 ### 8. map:verify's latest.json read is unguarded — breaks the MAP_VERIFY: contract
+
 `scripts/map/verify.ts:25` · correctness · **CONFIRMED**
 
 `JSON.parse(readFileSync(latestPath))` sits outside any try/catch (unlike the SVG read above it). Missing/corrupt `data/latest.json` → raw ENOENT stack trace instead of the contractual `MAP_VERIFY: <reason>` token (amended B.4 AC).
 
 ### 9. fetch.ts main() is a floating promise — escapes the FETCH_INTEGRITY: contract
+
 `scripts/etl/fetch.ts:90` · correctness · **CONFIRMED**
 
 Bare `main();` with no `.catch`. Only `fetch(url)` itself is wrapped; `await res.text()` (line 52) is unguarded, so a mid-body connection reset rejects outside `fail()` — stack trace, no token.
 
 ### 10. National-row filter keys on SizeRank instead of region identity
+
 `src/etl/transform.ts:43` · correctness · **PLAUSIBLE**
 
 `if (row.meta.SizeRank === "0") continue;` runs against ZIP files too. Should key on `RegionID === "102001"` / `RegionType === "country"`. No current-data case exists (ZIP files carry no SizeRank-0 row today), hence PLAUSIBLE — a one-line hardening.
@@ -81,7 +91,7 @@ Bare `main();` with no `.catch`. Only `fetch(url)` itself is wrapped; `await res
 
 All verified; fell below the top-10 report cap. Cleanup/efficiency unless noted.
 
-11. **`scripts/etl/trim-fixtures.ts:75` — `localeCompare` sort in fixture selection** · PLAUSIBLE, determinism-adjacent: `byId` uses locale-dependent collation while every other sort in the repo deliberately uses lexical `<`/`>`. The sort picks *which rows become fixtures*; a different locale could pick different rows on regeneration. Switch to the lexical comparator.
+11. **`scripts/etl/trim-fixtures.ts:75` — `localeCompare` sort in fixture selection** · PLAUSIBLE, determinism-adjacent: `byId` uses locale-dependent collation while every other sort in the repo deliberately uses lexical `<`/`>`. The sort picks _which rows become fixtures_; a different locale could pick different rows on regeneration. Switch to the lexical comparator.
 12. **`scripts/map/build.ts:16` — fixture and live builds share `data/map/metro-map.svg`** · CONFIRMED: `--fixtures` switches only the input; a Phase D live build will overwrite the committed fixture artifact that CI byte-diffs, breaking the CI determinism gate on the next fixture check. Needs distinct outputs or an explicit story for the transition.
 13. **`scripts/etl/build-crosswalk.ts:11` — no existsSync guard on the cached county crosswalk** · CONFIRMED: fresh checkout → raw ENOENT instead of a `FETCH_INTEGRITY:` message with the download URL (build-boundaries.ts has exactly that guard). Also: the county crosswalk isn't in fetch.ts SOURCES, so nothing re-downloads it.
 14. **`scripts/etl/trim-fixtures.ts:19` — `fields()` is a verbatim copy of `splitCsvLine`** · CONFIRMED: character-for-character duplicate instead of importing from `src/etl/csv.ts` (build-crosswalk.ts imports it correctly).

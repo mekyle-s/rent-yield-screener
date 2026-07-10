@@ -25,7 +25,11 @@ function runCli(script: string, args: string[], cwd = ROOT) {
     });
     return { status: 0, stdout, stderr: "" };
   } catch (e: any) {
-    return { status: e.status ?? 1, stdout: e.stdout?.toString() ?? "", stderr: e.stderr?.toString() ?? "" };
+    return {
+      status: e.status ?? 1,
+      stdout: e.stdout?.toString() ?? "",
+      stderr: e.stderr?.toString() ?? "",
+    };
   }
 }
 
@@ -48,14 +52,29 @@ describe("etl:validate threshold parsing (finding #5)", () => {
     const dir = mkdtempSync(join(tmpdir(), "rys-thresh-"));
     const latest = join(dir, "latest.json");
     const rec = (id: string, ratio: number) => ({
-      regionId: id, regionName: "X", stateName: "XX", month: "2026-05", zhvi: 100000, zori: 1000, ratio,
+      regionId: id,
+      regionName: "X",
+      stateName: "XX",
+      month: "2026-05",
+      zhvi: 100000,
+      zori: 1000,
+      ratio,
     });
-    const audit = { joined: 0, zhviOnly: 0, zoriOnly: 0, zeroRent: 0, noSharedMonth: 0 };
-    writeFileSync(latest, JSON.stringify({
-      meta: { snapshotMonth: "2026-05", audit: { metro: audit, zip: audit } },
-      metros: Array.from({ length: 10 }, (_, i) => rec(`m${i}`, 10 + i)),
-      zips: Array.from({ length: 20 }, (_, i) => rec(`z${i}`, 8 + i)),
-    }));
+    const audit = {
+      joined: 0,
+      zhviOnly: 0,
+      zoriOnly: 0,
+      zeroRent: 0,
+      noSharedMonth: 0,
+    };
+    writeFileSync(
+      latest,
+      JSON.stringify({
+        meta: { snapshotMonth: "2026-05", audit: { metro: audit, zip: audit } },
+        metros: Array.from({ length: 10 }, (_, i) => rec(`m${i}`, 10 + i)),
+        zips: Array.from({ length: 20 }, (_, i) => rec(`z${i}`, 8 + i)),
+      }),
+    );
     try {
       return runCli(VALIDATE, ["--latest", latest, ...extraArgs]);
     } finally {
@@ -86,7 +105,10 @@ describe("etl:validate threshold parsing (finding #5)", () => {
     const dir = mkdtempSync(join(tmpdir(), "rys-positional-"));
     const bad = join(dir, "bad-schema.csv");
     // Missing StateName meta column → a schema violation IF the path is validated.
-    writeFileSync(bad, "RegionID,SizeRank,RegionName,RegionType,2025-05-31\n1,1,A,msa,100\n");
+    writeFileSync(
+      bad,
+      "RegionID,SizeRank,RegionName,RegionType,2025-05-31\n1,1,A,msa,100\n",
+    );
     try {
       // Run in an EMPTY cwd so default mode has nothing to validate — if the path
       // were dropped, the finding-#2 guard would fire FETCH_INTEGRITY: instead.

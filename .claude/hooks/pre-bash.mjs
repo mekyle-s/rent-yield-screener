@@ -42,7 +42,9 @@ function checkPush(tokens, loop) {
   if (force && refspecs.some(targetsTrunk))
     deny("force-push targeting main/master (--force/-f/--force-with-lease)");
   if (loop && refspecs.some(targetsTrunk))
-    deny("loop iterations may not push to main/master — claude/* branches only (CLAUDE_LOOP=1)");
+    deny(
+      "loop iterations may not push to main/master — claude/* branches only (CLAUDE_LOOP=1)",
+    );
 }
 
 // covers unix rm AND PowerShell Remove-Item + its aliases (the matcher covers

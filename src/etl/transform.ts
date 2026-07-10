@@ -44,7 +44,11 @@ const NATIONAL_REGION_ID = "102001";
 export function toRegionSeries(parsed: ParsedCsv): Map<string, RegionSeries> {
   const out = new Map<string, RegionSeries>();
   for (const row of parsed.rows) {
-    if (row.meta.RegionID === NATIONAL_REGION_ID || row.meta.RegionType === "country") continue;
+    if (
+      row.meta.RegionID === NATIONAL_REGION_ID ||
+      row.meta.RegionType === "country"
+    )
+      continue;
     out.set(row.meta.RegionID, {
       meta: row.meta,
       series: row.values,
@@ -58,7 +62,13 @@ export function computeP2R(
   zhvi: Map<string, RegionSeries>,
   zori: Map<string, RegionSeries>,
 ): P2RResult {
-  const audit: JoinAudit = { joined: 0, zhviOnly: 0, zoriOnly: 0, zeroRent: 0, noSharedMonth: 0 };
+  const audit: JoinAudit = {
+    joined: 0,
+    zhviOnly: 0,
+    zoriOnly: 0,
+    zeroRent: 0,
+    noSharedMonth: 0,
+  };
   const records: P2RRecord[] = [];
 
   for (const id of zori.keys()) if (!zhvi.has(id)) audit.zoriOnly++;
@@ -100,7 +110,9 @@ export function computeP2R(
     });
   }
 
-  records.sort((a, b) => (a.regionId < b.regionId ? -1 : a.regionId > b.regionId ? 1 : 0));
+  records.sort((a, b) =>
+    a.regionId < b.regionId ? -1 : a.regionId > b.regionId ? 1 : 0,
+  );
   audit.joined = records.length;
   return { records, audit };
 }

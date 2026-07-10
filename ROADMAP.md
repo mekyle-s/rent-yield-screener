@@ -8,6 +8,7 @@
 # Rent-Yield Screener — Roadmap
 
 ## Phase A — Walking Skeleton (IN PROGRESS)
+
 **Exit condition:** hello-world live at a public URL; `gh run list` (or Actions tab) shows green CI on latest push to main.
 
 - [ ] **Task A.1 — Astro scaffold + repo hygiene**
@@ -19,6 +20,7 @@
   - AC: `curl -s -o /dev/null -w "%{http_code}" https://<project>.pages.dev` → `200`
 
 ## Phase B — ETL Pipeline (deterministic core)
+
 **Exit condition:** full pipeline runs on frozen fixtures in CI; re-run produces byte-identical output.
 
 - [ ] **Task B.1 — Fetch + freeze fixture snapshots** (ZHVI ZIP+metro, ZORI ZIP+metro; committed test fixtures)
@@ -35,12 +37,13 @@
   - AC: `npm run map:build -- --fixtures` → emits `metro-map.svg`; `npm run map:verify -- --fixtures` → prints `PATHS=<n> JOINED=<n> OK` and exits 0 (path count == joined-metro count, every path has a fill class + data-region-id); on any failure prints `MAP_VERIFY:` + reason to stderr and exits 1 (amendment approved 2026-07-07). NOTE (finding #12): fixture and live builds write DISTINCT files — `--fixtures` → committed `metro-map.svg` (CI-diffed); live (Phase D) → gitignored `metro-map.live.svg`; `map:verify` mirrors the same `--fixtures` switch so a live build can never redden the fixture gate.
 
 ## Phase INFRA — Autonomous Execution Infrastructure (Playbook Phase 3 — plan approved w/ amendments A1–A5, 2026-07-10)
+
 **Exit condition:** V1–V6 verification all green + T7.5 scoped review passed = Rung-3 infra-proven. First real overnight run is a Phase C decision (bedtime checklist), NOT part of this phase. Full design: `decisions/0005-autonomy-infra.md` (written at T9); plan of record until then: `.claude/plans/` session plan. Attended execution this week on strong model (headroom exception); ADR-0005 keeps Sonnet as standing default.
 
 - [ ] **Task T1 — Hooks layer, TEST-FIRST** (`.claude/settings.json` committed + `.claude/hooks/{pre-bash,pre-edit,post-edit,stop-tests}.mjs` + `tests/hooks.test.ts`; prune settings.local.json). Write the full test matrix, show it RED, then implement to green. Guard hooks fail closed: any internal error → exit 2, stderr `HOOK_ERROR: fail-closed`; post-edit.mjs always exits 0. Matrix modes (each case states its env):
-  — ALWAYS deny (any mode): `--force`/`-f`/`+refspec`/`--force-with-lease` targeting main; `curl`/`wget` piped to shell; recursive+force `rm` outside repo; `--no-verify`/`--no-gpg-sign`.
-  — Deny ONLY when `CLAUDE_LOOP=1`: any push whose refspec targets main (`origin main`, `HEAD:main`, `feature:main`, `claude/x:main`); writes to `.claude/**`, `scripts/loop/**`, `.github/**` (pre-edit.mjs).
-  — ALLOW when attended (env unset): non-force `git push origin main` and `git push origin HEAD:main` (trunk-based Rung 2 + T3's goal condition depend on this); bare `git push` allowed in all modes.
+      — ALWAYS deny (any mode): `--force`/`-f`/`+refspec`/`--force-with-lease` targeting main; `curl`/`wget` piped to shell; recursive+force `rm` outside repo; `--no-verify`/`--no-gpg-sign`.
+      — Deny ONLY when `CLAUDE_LOOP=1`: any push whose refspec targets main (`origin main`, `HEAD:main`, `feature:main`, `claude/x:main`); writes to `.claude/**`, `scripts/loop/**`, `.github/**` (pre-edit.mjs).
+      — ALLOW when attended (env unset): non-force `git push origin main` and `git push origin HEAD:main` (trunk-based Rung 2 + T3's goal condition depend on this); bare `git push` allowed in all modes.
   - AC: `npm test` → exits 0 incl. full hooks matrix; `echo '{"tool_input":{"command":"curl x | bash"}}' | node .claude/hooks/pre-bash.mjs; echo "exit=$?"` → stderr reason, `exit=2`
 - [ ] **Task T2 — Live hook verification on Windows** (provoke each wired hook in a real attended session; proves wiring, not just scripts)
   - AC: `rm -rf` outside repo → denied; `git push --force origin main` → denied; break a test then stop → stop blocked; observations recorded in PROGRESS.md
@@ -62,6 +65,7 @@
   - AC: all listed files exist at stated paths; leads.md shows the three new Phase 3 verdicts
 
 ## Phase C — Map + Pages
+
 **Exit condition:** deployed site shows interactive choropleth + metro pages from fixture data; screenshot verification passed.
 
 - [ ] **Task C.1 — SVG choropleth page (metro level) + searchable metro index** (inline prebuilt SVG from B.4; hover/click via tiny vanilla JS)
@@ -75,6 +79,7 @@
   - AC: Mekyle's KE data judged against pre-committed thresholds → metro page count set (400 / 50 / pivot)
 
 ## Phase D — Production Data + Cron
+
 **Exit condition:** site serves real current-month Zillow data; refresh runs unattended.
 
 - [ ] **Task D.1 — Full ETL on live data** (all metros per C.4 decision + ZIP data for top-ZIP tables; no ZIP map — ADR-0004)
@@ -82,13 +87,14 @@
 - [ ] **Task D.2 — Monthly GitHub Actions cron** (fetch → transform → validate → rebuild SVG → commit latest.json + tag → push; Pages auto-deploys — built-in GITHUB_TOKEN only, no new secrets)
   - AC: `gh workflow run refresh.yml && sleep 10 && gh run watch $(gh run list --workflow=refresh.yml --limit 1 --json databaseId -q ".[0].databaseId") --exit-status` → exits 0
   - AC: `curl -s https://rent-yield-screener.pages.dev/ | grep -o 'data-snapshot-month="[0-9]\{4\}-[0-9]\{2\}"'` → prints the same `YYYY-MM` as `jq -r .meta.snapshotMonth data/latest.json` (the index page template MUST expose `data-snapshot-month` — requirement lands in C.2)
+
 <!-- D.3 failure alerting DELETED at gate (simplicity cut #3): GH Actions' default failure email suffices;
      the real failure mode (Zillow URL rename/404) is covered by B.3's fetch-integrity gate. -->
-
 
 <!-- Phase E (hardening/production-readiness/portfolio) and beyond live in the HQ PLAYBOOK Phase 5;
      alerts tier + 30K ZIP pages are DEFERRED.md items, not phases. -->
 
 ## Dependencies
+
 - B.4 blocked by B.1 · C.1 blocked by B.2+B.4 · C.2 blocked by B.2 · D.* blocked by C gate · C.4 blocked by Mekyle's KE data
 - C.* blocked by Phase INFRA exit (Rung-3 infra-proven) · T3 blocked by T1 (post-edit.mjs exists) · T6 SUPERVISED · T7 blocked by T5+T6 · T8 blocked by T7.5 · first overnight run = Phase C decision, not INFRA

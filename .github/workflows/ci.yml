@@ -17,6 +17,8 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run check
+      - name: Format check (Prettier — T3 Rung 2 trial)
+        run: npx prettier --check .
       - name: Test
         run: npm test
       - name: ETL determinism — regenerate and diff committed golden (constitution VI)

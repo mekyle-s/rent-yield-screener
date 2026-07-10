@@ -14,12 +14,17 @@ const flag = (name: string, dflt: string) => {
 const SRC = flag("--src", ".cache/zillow-raw/county-crosswalk.csv");
 const OUT = flag("--out", "data/crosswalk/metro-cbsa.csv");
 
-const lines = readFileSync(SRC, "utf8").replace(/\r\n/g, "\n").split("\n").filter(Boolean);
+const lines = readFileSync(SRC, "utf8")
+  .replace(/\r\n/g, "\n")
+  .split("\n")
+  .filter(Boolean);
 const header = splitCsvLine(lines[0]);
 const iMetro = header.indexOf("MetroRegionID_Zillow");
 const iCbsa = header.indexOf("CBSACode");
 if (iMetro === -1 || iCbsa === -1) {
-  process.stderr.write("SCHEMA_VIOLATION: county crosswalk missing MetroRegionID_Zillow/CBSACode\n");
+  process.stderr.write(
+    "SCHEMA_VIOLATION: county crosswalk missing MetroRegionID_Zillow/CBSACode\n",
+  );
   process.exit(1);
 }
 
@@ -36,19 +41,28 @@ for (const line of lines.slice(1)) {
   if (!metro || !cbsa) continue; // counties outside any CBSA
   const prev = pairs.get(metro);
   if (prev && prev !== cbsa) {
-    process.stderr.write(`SCHEMA_VIOLATION: metro ${metro} maps to both CBSA ${prev} and ${cbsa}\n`);
+    process.stderr.write(
+      `SCHEMA_VIOLATION: metro ${metro} maps to both CBSA ${prev} and ${cbsa}\n`,
+    );
     process.exit(1);
   }
   const prevMetro = cbsaToMetro.get(cbsa);
   if (prevMetro && prevMetro !== metro) {
-    process.stderr.write(`SCHEMA_VIOLATION: CBSA ${cbsa} maps from both metros ${prevMetro} and ${metro}\n`);
+    process.stderr.write(
+      `SCHEMA_VIOLATION: CBSA ${cbsa} maps from both metros ${prevMetro} and ${metro}\n`,
+    );
     process.exit(1);
   }
   pairs.set(metro, cbsa);
   cbsaToMetro.set(cbsa, metro);
 }
 
-const rows = [...pairs.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+const rows = [...pairs.entries()].sort(([a], [b]) =>
+  a < b ? -1 : a > b ? 1 : 0,
+);
 mkdirSync(dirname(OUT), { recursive: true });
-writeFileSync(OUT, ["RegionID,CBSACode", ...rows.map(([m, c]) => `${m},${c}`)].join("\n") + "\n");
+writeFileSync(
+  OUT,
+  ["RegionID,CBSACode", ...rows.map(([m, c]) => `${m},${c}`)].join("\n") + "\n",
+);
 console.log(`${OUT}: ${rows.length} metro->CBSA pairs`);

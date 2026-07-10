@@ -38,10 +38,19 @@ function fields(line: string): string[] {
   return out;
 }
 
-type Row = { line: string; id: string; sizeRank: number; name: string; blankLast: boolean };
+type Row = {
+  line: string;
+  id: string;
+  sizeRank: number;
+  name: string;
+  blankLast: boolean;
+};
 
 function load(file: string): { header: string; rows: Row[] } {
-  const lines = readFileSync(`${RAW}/${file}`, "utf8").replace(/\r\n/g, "\n").split("\n").filter((l) => l.length > 0);
+  const lines = readFileSync(`${RAW}/${file}`, "utf8")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .filter((l) => l.length > 0);
   const [header, ...rest] = lines;
   const rows = rest.map((line) => {
     const f = fields(line);
@@ -58,7 +67,10 @@ function load(file: string): { header: string; rows: Row[] } {
 
 function write(file: string, header: string, rows: Row[]) {
   // Preserve raw file order (SizeRank order) for realism; LF-only per constitution VI.
-  writeFileSync(`${OUT}/${file}`, [header, ...rows.map((r) => r.line)].join("\n") + "\n");
+  writeFileSync(
+    `${OUT}/${file}`,
+    [header, ...rows.map((r) => r.line)].join("\n") + "\n",
+  );
   console.log(`${file}: ${rows.length} data rows`);
 }
 
@@ -79,31 +91,62 @@ const zhviMetroIds = new Set(zhviMetro.rows.map((r) => r.id));
 const byId = (a: Row, b: Row) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 const metroCore = zhviMetro.rows.filter((r) => r.sizeRank <= 15); // includes SizeRank-0 national row
-const zhviOnlyMetros = zhviMetro.rows.filter((r) => !zoriMetroIds.has(r.id)).sort(byId).slice(0, 2);
-const zoriOnlyMetros = zoriMetro.rows.filter((r) => !zhviMetroIds.has(r.id)).sort(byId).slice(0, 1);
+const zhviOnlyMetros = zhviMetro.rows
+  .filter((r) => !zoriMetroIds.has(r.id))
+  .sort(byId)
+  .slice(0, 2);
+const zoriOnlyMetros = zoriMetro.rows
+  .filter((r) => !zhviMetroIds.has(r.id))
+  .sort(byId)
+  .slice(0, 1);
 
 const metroIds = new Set([...metroCore, ...zhviOnlyMetros].map((r) => r.id));
-write("zhvi-metro.csv", zhviMetro.header, zhviMetro.rows.filter((r) => metroIds.has(r.id)));
+write(
+  "zhvi-metro.csv",
+  zhviMetro.header,
+  zhviMetro.rows.filter((r) => metroIds.has(r.id)),
+);
 write(
   "zori-metro.csv",
   zoriMetro.header,
-  zoriMetro.rows.filter((r) => metroIds.has(r.id) || zoriOnlyMetros.some((z) => z.id === r.id)),
+  zoriMetro.rows.filter(
+    (r) => metroIds.has(r.id) || zoriOnlyMetros.some((z) => z.id === r.id),
+  ),
 );
 
 // --- zip selection ---
 const zoriZipIds = new Set(zoriZip.rows.map((r) => r.id));
 const leadingZero = (r: Row) => /^0/.test(r.name);
 
-const zipCore = zhviZip.rows.filter((r) => zoriZipIds.has(r.id)).sort((a, b) => a.sizeRank - b.sizeRank).slice(0, 10);
-const lzBoth = zhviZip.rows.filter((r) => leadingZero(r) && zoriZipIds.has(r.id)).sort(byId).slice(0, 1);
-const lzZhviOnly = zhviZip.rows.filter((r) => leadingZero(r) && !zoriZipIds.has(r.id)).sort(byId).slice(0, 1);
+const zipCore = zhviZip.rows
+  .filter((r) => zoriZipIds.has(r.id))
+  .sort((a, b) => a.sizeRank - b.sizeRank)
+  .slice(0, 10);
+const lzBoth = zhviZip.rows
+  .filter((r) => leadingZero(r) && zoriZipIds.has(r.id))
+  .sort(byId)
+  .slice(0, 1);
+const lzZhviOnly = zhviZip.rows
+  .filter((r) => leadingZero(r) && !zoriZipIds.has(r.id))
+  .sort(byId)
+  .slice(0, 1);
 const blankZhvi = zhviZip.rows.filter((r) => r.blankLast);
 const blankZori = zoriZip.rows.filter((r) => r.blankLast);
 const blankZoriIds = new Set(blankZori.map((r) => r.id));
 const blankZoriInZhvi = zhviZip.rows.filter((r) => blankZoriIds.has(r.id));
 
 const zipIds = new Set(
-  [...zipCore, ...lzBoth, ...lzZhviOnly, ...blankZhvi, ...blankZoriInZhvi].map((r) => r.id),
+  [...zipCore, ...lzBoth, ...lzZhviOnly, ...blankZhvi, ...blankZoriInZhvi].map(
+    (r) => r.id,
+  ),
 );
-write("zhvi-zip.csv", zhviZip.header, zhviZip.rows.filter((r) => zipIds.has(r.id)));
-write("zori-zip.csv", zoriZip.header, zoriZip.rows.filter((r) => zipIds.has(r.id)));
+write(
+  "zhvi-zip.csv",
+  zhviZip.header,
+  zhviZip.rows.filter((r) => zipIds.has(r.id)),
+);
+write(
+  "zori-zip.csv",
+  zoriZip.header,
+  zoriZip.rows.filter((r) => zipIds.has(r.id)),
+);

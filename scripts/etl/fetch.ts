@@ -35,10 +35,7 @@ function fail(url: string, reason: string): never {
   process.exit(1);
 }
 
-async function fetchOne(
-  url: string,
-  expectedHeader?: string,
-): Promise<string> {
+async function fetchOne(url: string, expectedHeader?: string): Promise<string> {
   let res: Response;
   try {
     res = await fetch(url);
@@ -95,4 +92,6 @@ async function main() {
 
 // Never let a rejection escape as an unhandled promise (finding #9): any error
 // outside a fail() call (I/O, an unforeseen throw) must still speak the token.
-main().catch((e) => fail("(none)", `unexpected error (${(e as Error).message})`));
+main().catch((e) =>
+  fail("(none)", `unexpected error (${(e as Error).message})`),
+);

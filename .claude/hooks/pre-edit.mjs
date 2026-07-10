@@ -5,7 +5,11 @@
 // denied (exit 2). Attended sessions are unaffected. Fail-closed (A1).
 import { readFileSync } from "node:fs";
 
-const PROTECTED = [/(^|\/)\.claude(\/|$)/, /(^|\/)scripts\/loop(\/|$)/, /(^|\/)\.github(\/|$)/];
+const PROTECTED = [
+  /(^|\/)\.claude(\/|$)/,
+  /(^|\/)scripts\/loop(\/|$)/,
+  /(^|\/)\.github(\/|$)/,
+];
 
 try {
   const data = JSON.parse(readFileSync(0, "utf8"));

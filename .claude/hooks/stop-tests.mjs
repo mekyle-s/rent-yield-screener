@@ -31,9 +31,15 @@ try {
 
   if (watched.stdout.trim()) {
     const testCmd = process.env.CLAUDE_HOOK_TEST_CMD || "npx vitest run";
-    const t = spawnSync(testCmd, { shell: true, encoding: "utf8", timeout: 300_000 });
+    const t = spawnSync(testCmd, {
+      shell: true,
+      encoding: "utf8",
+      timeout: 300_000,
+    });
     if (t.status !== 0)
-      deny("Tests failing — fix before stopping (constitution: tests-must-pass)");
+      deny(
+        "Tests failing — fix before stopping (constitution: tests-must-pass)",
+      );
   }
 
   if (loop && all.stdout.trim())

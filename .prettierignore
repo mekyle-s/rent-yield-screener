@@ -1,0 +1,12 @@
+# Determinism-critical artifacts — NEVER formatted (constitution VI: the golden
+# snapshot and fixture bytes are the contract; formatting them breaks CI diffs)
+data/
+tests/golden/
+tests/fixtures/
+
+# build output
+dist/
+.astro/
+
+# raw downloads (constitution V: never redistributed, never touched)
+.cache/

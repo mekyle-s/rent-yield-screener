@@ -22,11 +22,20 @@ if (!input || !out) {
 
 const load = (f: string) => parseCsv(readFileSync(join(input, f), "utf8"));
 
-const metro = computeP2R(toRegionSeries(load("zhvi-metro.csv")), toRegionSeries(load("zori-metro.csv")));
-const zip = computeP2R(toRegionSeries(load("zhvi-zip.csv")), toRegionSeries(load("zori-zip.csv")));
+const metro = computeP2R(
+  toRegionSeries(load("zhvi-metro.csv")),
+  toRegionSeries(load("zori-metro.csv")),
+);
+const zip = computeP2R(
+  toRegionSeries(load("zhvi-zip.csv")),
+  toRegionSeries(load("zori-zip.csv")),
+);
 
 mkdirSync(out, { recursive: true });
-writeFileSync(join(out, "latest.json"), serialize(buildLatestJson({ metro, zip })));
+writeFileSync(
+  join(out, "latest.json"),
+  serialize(buildLatestJson({ metro, zip })),
+);
 console.log(
   `latest.json written: ${metro.records.length} metros, ${zip.records.length} zips`,
 );

@@ -13,8 +13,13 @@ export interface LatestJson {
   zips: P2RResult["records"];
 }
 
-export function buildLatestJson(input: { metro: P2RResult; zip: P2RResult }): LatestJson {
-  const months = [...input.metro.records, ...input.zip.records].map((r) => r.month);
+export function buildLatestJson(input: {
+  metro: P2RResult;
+  zip: P2RResult;
+}): LatestJson {
+  const months = [...input.metro.records, ...input.zip.records].map(
+    (r) => r.month,
+  );
   const snapshotMonth = months.reduce((a, b) => (a > b ? a : b), "");
   return {
     meta: {

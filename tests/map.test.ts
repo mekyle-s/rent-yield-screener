@@ -24,7 +24,12 @@ function bbox(d: string) {
     xs.push(nums[i]);
     ys.push(nums[i + 1]);
   }
-  return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  };
 }
 
 describe("committed choropleth SVG geometry (finding #1)", () => {
@@ -40,7 +45,10 @@ describe("committed choropleth SVG geometry (finding #1)", () => {
       const b = bbox(d);
       const spansX = b.maxX - b.minX >= VIEWBOX.w;
       const spansY = b.maxY - b.minY >= VIEWBOX.h;
-      expect(spansX && spansY, `path spans full viewBox: ${d.slice(0, 60)}`).toBe(false);
+      expect(
+        spansX && spansY,
+        `path spans full viewBox: ${d.slice(0, 60)}`,
+      ).toBe(false);
     }
   });
 
@@ -49,11 +57,17 @@ describe("committed choropleth SVG geometry (finding #1)", () => {
     // metro as a hole — the rectangle's first vertex sits far outside the viewBox.
     for (const d of ds) {
       const first = d.match(/^M\s*(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
-      expect(first, `path has no leading moveto: ${d.slice(0, 40)}`).not.toBeNull();
+      expect(
+        first,
+        `path has no leading moveto: ${d.slice(0, 40)}`,
+      ).not.toBeNull();
       const x = Number(first![1]);
       const y = Number(first![2]);
       const outside = x < 0 || y < 0 || x > VIEWBOX.w || y > VIEWBOX.h;
-      expect(outside, `path starts outside viewBox (clip-extent rect): ${d.slice(0, 40)}`).toBe(false);
+      expect(
+        outside,
+        `path starts outside viewBox (clip-extent rect): ${d.slice(0, 40)}`,
+      ).toBe(false);
     }
   });
 });

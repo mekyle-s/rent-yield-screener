@@ -21,7 +21,13 @@ const rec = (regionId: string, ratio: number) => ({
   ratio,
 });
 
-const audit = { joined: 0, zhviOnly: 0, zoriOnly: 0, zeroRent: 0, noSharedMonth: 0 };
+const audit = {
+  joined: 0,
+  zhviOnly: 0,
+  zoriOnly: 0,
+  zeroRent: 0,
+  noSharedMonth: 0,
+};
 
 function doc(metroRatios: number[], zipRatios: number[]): LatestJson {
   return {
@@ -34,7 +40,9 @@ function doc(metroRatios: number[], zipRatios: number[]): LatestJson {
 describe("validateCsvSchema", () => {
   it("accepts both committed fixture layouts (metro=5, zip=9 meta cols)", () => {
     for (const f of ["zhvi-metro.csv", "zori-zip.csv"]) {
-      const res = validateCsvSchema(readFileSync(`tests/fixtures/${f}`, "utf8"));
+      const res = validateCsvSchema(
+        readFileSync(`tests/fixtures/${f}`, "utf8"),
+      );
       expect(res.ok, f).toBe(true);
     }
   });
@@ -51,7 +59,9 @@ describe("validateCsvSchema", () => {
   });
 
   it("flags an unexpected meta column (schema drift must fail loudly)", () => {
-    const res = validateCsvSchema(`${METRO_HEADER},Surprise,2025-05-31\n1,1,A,msa,ZZ,huh,100`);
+    const res = validateCsvSchema(
+      `${METRO_HEADER},Surprise,2025-05-31\n1,1,A,msa,ZZ,huh,100`,
+    );
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.detail).toContain("Surprise");
   });
@@ -72,30 +82,45 @@ describe("validateLatest — rowcount + ratio-range (distribution check per appr
   const okZips = Array.from({ length: 20 }, (_, i) => 8 + i); // 8..27, median in band
 
   it("passes a healthy document", () => {
-    const res = validateLatest(doc(okMetros, okZips), { minMetros: 5, minZips: 10 });
+    const res = validateLatest(doc(okMetros, okZips), {
+      minMetros: 5,
+      minZips: 10,
+    });
     expect(res.ok).toBe(true);
   });
 
   it("ROWCOUNT_ANOMALY when metro count is below the minimum", () => {
-    const res = validateLatest(doc([15], okZips), { minMetros: 5, minZips: 10 });
+    const res = validateLatest(doc([15], okZips), {
+      minMetros: 5,
+      minZips: 10,
+    });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.token).toBe("ROWCOUNT_ANOMALY:");
   });
 
   it("RATIO_RANGE when any METRO record leaves [5, 60] — aggregates are stable", () => {
-    const res = validateLatest(doc([...okMetros, 75], okZips), { minMetros: 5, minZips: 10 });
+    const res = validateLatest(doc([...okMetros, 75], okZips), {
+      minMetros: 5,
+      minZips: 10,
+    });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.token).toBe("RATIO_RANGE:");
   });
 
   it("tolerates extreme ZIP outliers (Balboa Island rule): one 182.9 ZIP passes", () => {
-    const res = validateLatest(doc(okMetros, [...okZips, 182.92]), { minMetros: 5, minZips: 10 });
+    const res = validateLatest(doc(okMetros, [...okZips, 182.92]), {
+      minMetros: 5,
+      minZips: 10,
+    });
     expect(res.ok).toBe(true);
   });
 
   it("RATIO_RANGE when a ZIP ratio is non-positive or non-finite", () => {
     for (const bad of [0, -3, Infinity, NaN]) {
-      const res = validateLatest(doc(okMetros, [...okZips, bad]), { minMetros: 5, minZips: 10 });
+      const res = validateLatest(doc(okMetros, [...okZips, bad]), {
+        minMetros: 5,
+        minZips: 10,
+      });
       expect(res.ok, `zip ratio ${bad}`).toBe(false);
       if (!res.ok) expect(res.token).toBe("RATIO_RANGE:");
     }
@@ -103,7 +128,10 @@ describe("validateLatest — rowcount + ratio-range (distribution check per appr
 
   it("RATIO_RANGE when the ZIP MEDIAN leaves [5, 60] — catches systematic corruption", () => {
     const shifted = okZips.map((r) => r * 100); // e.g. unit change / column shift
-    const res = validateLatest(doc(okMetros, shifted), { minMetros: 5, minZips: 10 });
+    const res = validateLatest(doc(okMetros, shifted), {
+      minMetros: 5,
+      minZips: 10,
+    });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.token).toBe("RATIO_RANGE:");
   });
@@ -123,6 +151,8 @@ describe("validateLatest — rowcount + ratio-range (distribution check per appr
 
   it("committed golden snapshot passes with fixture-scale minimums", () => {
     const golden = JSON.parse(readFileSync("tests/golden/latest.json", "utf8"));
-    expect(validateLatest(golden, { minMetros: 10, minZips: 10 }).ok).toBe(true);
+    expect(validateLatest(golden, { minMetros: 10, minZips: 10 }).ok).toBe(
+      true,
+    );
   });
 });

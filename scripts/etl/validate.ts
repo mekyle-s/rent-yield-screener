@@ -43,7 +43,9 @@ function die(token: string, detail: string): never {
 // value, so the arg after it is a real path and must not be swallowed (equals-form
 // regression uncovered in the finding-#5 review).
 const csvPaths = args.filter(
-  (a, i) => !a.startsWith("--") && !(args[i - 1]?.startsWith("--") && !args[i - 1]!.includes("=")),
+  (a, i) =>
+    !a.startsWith("--") &&
+    !(args[i - 1]?.startsWith("--") && !args[i - 1]!.includes("=")),
 );
 const latestPath = flag("--latest");
 
@@ -61,10 +63,16 @@ if (csvPaths.length === 0 && !latestPath) {
   // publish must FAIL loudly, not proceed on unvalidated/nonexistent data.
   const hasLatest = existsSync("data/latest.json");
   if (defaults.length === 0 && !hasLatest)
-    die("FETCH_INTEGRITY:", `no inputs to validate — expected ${expected.join(", ")} or data/latest.json`);
+    die(
+      "FETCH_INTEGRITY:",
+      `no inputs to validate — expected ${expected.join(", ")} or data/latest.json`,
+    );
   csvPaths.push(...defaults);
   if (hasLatest) {
-    const res = validateLatest(JSON.parse(readFileSync("data/latest.json", "utf8")), { minMetros, minZips });
+    const res = validateLatest(
+      JSON.parse(readFileSync("data/latest.json", "utf8")),
+      { minMetros, minZips },
+    );
     if (!res.ok) die(res.token, res.detail);
     console.log("latest.json OK (data/latest.json)");
   }
@@ -77,7 +85,10 @@ for (const p of csvPaths) {
 }
 
 if (latestPath) {
-  const res = validateLatest(JSON.parse(readFileSync(latestPath, "utf8")), { minMetros, minZips });
+  const res = validateLatest(JSON.parse(readFileSync(latestPath, "utf8")), {
+    minMetros,
+    minZips,
+  });
   if (!res.ok) die(res.token, `${res.detail} (${latestPath})`);
   console.log(`latest.json OK ${latestPath}`);
 }

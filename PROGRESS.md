@@ -32,12 +32,13 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 ## Last action & result
 
 2026-07-10: **T2 live hook verification PASSED — all provocations observed in the real session transcript** (correction to an earlier assumption: hooks in `.claude/settings.json` went live mid-session without a restart; `$CLAUDE_PROJECT_DIR` substitution works on Windows):
+
 1. `rm -rf /nonexistent-hook-probe` (Bash tool) → `BLOCKED: recursive+force rm/Remove-Item pointed outside the repo`, tool call denied pre-execution.
 2. `git push --force --dry-run origin main` → `BLOCKED: force-push targeting main/master` (probe carried `--dry-run` as a belt so even a hook failure couldn't publish).
 3. `Remove-Item -Recurse -Force C:\nonexistent-hook-probe` via the **PowerShell tool** → same deny (matcher `Bash|PowerShell` wiring confirmed on both tools).
 4. Deliberately red probe test (`tests/stop-probe.test.ts`) + stop attempt → **Stop hook refused the stop**: "Tests failing — fix before stopping (constitution: tests-must-pass)". Probe deleted (T2 artifact, not coverage), suite re-run: 161/161 green.
 5. Organic bonus deny during T1's own AC run: pipe-to-shell pattern in an `echo`'d payload string → `BLOCKED: curl/wget/iwr/irm piped into a shell` (conservative string-matching, known+accepted behavior; hook-testing payloads go via files, not inline strings).
-T1 (earlier same day): hooks layer test-first, 82 RED → GREEN, +28 Mekyle cases (bare-force push, PS Remove-Item aliases, iwr/irm→iex) 26 RED → 110/110 GREEN, committed ad0dd9e.
+   T1 (earlier same day): hooks layer test-first, 82 RED → GREEN, +28 Mekyle cases (bare-force push, PS Remove-Item aliases, iwr/irm→iex) 26 RED → 110/110 GREEN, committed ad0dd9e.
 
 ## Next action
 

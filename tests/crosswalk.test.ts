@@ -18,7 +18,9 @@ describe("metro-cbsa crosswalk", () => {
 
   it("covers every joined metro in the golden snapshot (100% or fail loudly)", () => {
     const golden = JSON.parse(readFileSync("tests/golden/latest.json", "utf8"));
-    const unmatched = golden.metros.filter((m: { regionId: string }) => !cw.has(m.regionId));
+    const unmatched = golden.metros.filter(
+      (m: { regionId: string }) => !cw.has(m.regionId),
+    );
     expect(unmatched).toEqual([]);
   });
 

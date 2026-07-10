@@ -24,7 +24,8 @@ try {
 
 const source = svg.match(/data-source="(fixtures|live)"/)?.[1];
 if (!source) die("SVG missing data-source attribute");
-const latestPath = source === "fixtures" ? "tests/golden/latest.json" : "data/latest.json";
+const latestPath =
+  source === "fixtures" ? "tests/golden/latest.json" : "data/latest.json";
 let latest: { metros: { regionId: string; regionName: string }[] };
 try {
   // Guarded so a missing/corrupt latest.json speaks the MAP_VERIFY: token
@@ -44,14 +45,19 @@ const pathTags = svg.match(/<path\b[^>]*>/g) ?? [];
 const paths = pathTags.length;
 
 for (const tag of pathTags) {
-  if (!/class="p2r-b\d"/.test(tag)) die(`path missing fill class: ${tag.slice(0, 120)}`);
-  if (!/data-region-id="[^"]+"/.test(tag)) die(`path missing data-region-id: ${tag.slice(0, 120)}`);
+  if (!/class="p2r-b\d"/.test(tag))
+    die(`path missing fill class: ${tag.slice(0, 120)}`);
+  if (!/data-region-id="[^"]+"/.test(tag))
+    die(`path missing data-region-id: ${tag.slice(0, 120)}`);
   // Geometry guard (finding #1): a complemented ring (RFC 7946 winding read by
   // d3-geo) is emitted as the clip-extent rectangle spanning the whole canvas.
   // No real metro path can span the full viewBox — reject any that does.
   const d = tag.match(/\bd="([^"]*)"/)?.[1] ?? "";
   const nums = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    maxX = -Infinity,
+    minY = Infinity,
+    maxY = -Infinity;
   for (let i = 0; i + 1 < nums.length; i += 2) {
     minX = Math.min(minX, nums[i]);
     maxX = Math.max(maxX, nums[i]);
@@ -60,7 +66,9 @@ for (const tag of pathTags) {
   }
   const rid = tag.match(/data-region-id="([^"]+)"/)?.[1] ?? "?";
   if (maxX - minX >= vbW && maxY - minY >= vbH)
-    die(`path ${rid} spans the full viewBox (complemented ring — check boundary winding): ${d.slice(0, 60)}`);
+    die(
+      `path ${rid} spans the full viewBox (complemented ring — check boundary winding): ${d.slice(0, 60)}`,
+    );
 }
 
 const ids = pathTags.map((t) => t.match(/data-region-id="([^"]+)"/)![1]);
@@ -70,8 +78,13 @@ if (paths !== joined) {
   const missing = latest.metros
     .map((m: { regionId: string; regionName: string }) => m)
     .filter((m: { regionId: string }) => !ids.includes(m.regionId))
-    .map((m: { regionId: string; regionName: string }) => `${m.regionId} (${m.regionName})`);
-  die(`PATHS=${paths} != JOINED=${joined}; missing: ${missing.join(", ") || "(extra paths present)"}`);
+    .map(
+      (m: { regionId: string; regionName: string }) =>
+        `${m.regionId} (${m.regionName})`,
+    );
+  die(
+    `PATHS=${paths} != JOINED=${joined}; missing: ${missing.join(", ") || "(extra paths present)"}`,
+  );
 }
 
 console.log(`PATHS=${paths} JOINED=${joined} OK`);
