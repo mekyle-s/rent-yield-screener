@@ -47,7 +47,11 @@ function baseName(t) {
 
 function targetsTrunk(refspec) {
   const ref = refspec.replace(/^\+/, "");
-  const dest = ref.includes(":") ? ref.split(":").pop() : ref;
+  // F2 (T7.5): normalize the full-ref form so refs/heads/main can't dodge this
+  const dest = (ref.includes(":") ? ref.split(":").pop() : ref).replace(
+    /^refs\/heads\//,
+    "",
+  );
   return dest === "main" || dest === "master";
 }
 

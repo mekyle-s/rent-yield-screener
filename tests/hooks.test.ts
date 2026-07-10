@@ -106,6 +106,12 @@ describe("pre-bash.mjs — ALWAYS deny, any mode", () => {
       "git push --force origin",
       /force/i,
     ],
+    // T7.5 finding 2: force + full-ref form, any mode
+    [
+      "force-push HEAD:refs/heads/main (full ref)",
+      "git push --force origin HEAD:refs/heads/main",
+      /force/i,
+    ],
     // PowerShell recursive+force deletes outside the repo (matcher covers PowerShell)
     [
       "Remove-Item -Recurse -Force absolute",
@@ -214,6 +220,17 @@ describe("pre-bash.mjs — deny ONLY when CLAUDE_LOOP=1 (any push refspec target
     ["push feature:main", "git push origin feature:main"],
     ["push claude/x:main", "git push origin claude/x:main"],
     ["push origin master", "git push origin master"],
+    // T7.5 finding 2: full-ref form must not dodge targetsTrunk
+    [
+      "push HEAD:refs/heads/main (full ref)",
+      "git push origin HEAD:refs/heads/main",
+    ],
+    [
+      "push claude/x:refs/heads/main (full ref)",
+      "git push origin claude/x:refs/heads/main",
+    ],
+    ["push refs/heads/main (full ref)", "git push origin refs/heads/main"],
+    ["delete :refs/heads/main (full ref)", "git push origin :refs/heads/main"],
   ];
   for (const [name, cmd] of loopOnlyDeny) {
     it(`[loop] denies ${name}`, () => {
