@@ -34,6 +34,33 @@
 - [ ] **Task B.4 — Metro boundaries: CBSA cartographic shapefile → simplified GeoJSON → prebuilt SVG choropleth** (mapshaper + d3-geo, pure JS — ADR-0004; no tippecanoe/PMTiles in V1)
   - AC: `npm run map:build -- --fixtures` → emits `metro-map.svg`; `npm run map:verify -- --fixtures` → prints `PATHS=<n> JOINED=<n> OK` and exits 0 (path count == joined-metro count, every path has a fill class + data-region-id); on any failure prints `MAP_VERIFY:` + reason to stderr and exits 1 (amendment approved 2026-07-07). NOTE (finding #12): fixture and live builds write DISTINCT files — `--fixtures` → committed `metro-map.svg` (CI-diffed); live (Phase D) → gitignored `metro-map.live.svg`; `map:verify` mirrors the same `--fixtures` switch so a live build can never redden the fixture gate.
 
+## Phase INFRA — Autonomous Execution Infrastructure (Playbook Phase 3 — plan approved w/ amendments A1–A5, 2026-07-10)
+**Exit condition:** V1–V6 verification all green + T7.5 scoped review passed = Rung-3 infra-proven. First real overnight run is a Phase C decision (bedtime checklist), NOT part of this phase. Full design: `decisions/0005-autonomy-infra.md` (written at T9); plan of record until then: `.claude/plans/` session plan. Attended execution this week on strong model (headroom exception); ADR-0005 keeps Sonnet as standing default.
+
+- [ ] **Task T1 — Hooks layer, TEST-FIRST** (`.claude/settings.json` committed + `.claude/hooks/{pre-bash,pre-edit,post-edit,stop-tests}.mjs` + `tests/hooks.test.ts`; prune settings.local.json). Write the full test matrix, show it RED, then implement to green. Guard hooks fail closed: any internal error → exit 2, stderr `HOOK_ERROR: fail-closed`; post-edit.mjs always exits 0. Matrix modes (each case states its env):
+  — ALWAYS deny (any mode): `--force`/`-f`/`+refspec`/`--force-with-lease` targeting main; `curl`/`wget` piped to shell; recursive+force `rm` outside repo; `--no-verify`/`--no-gpg-sign`.
+  — Deny ONLY when `CLAUDE_LOOP=1`: any push whose refspec targets main (`origin main`, `HEAD:main`, `feature:main`, `claude/x:main`); writes to `.claude/**`, `scripts/loop/**`, `.github/**` (pre-edit.mjs).
+  — ALLOW when attended (env unset): non-force `git push origin main` and `git push origin HEAD:main` (trunk-based Rung 2 + T3's goal condition depend on this); bare `git push` allowed in all modes.
+  - AC: `npm test` → exits 0 incl. full hooks matrix; `echo '{"tool_input":{"command":"curl x | bash"}}' | node .claude/hooks/pre-bash.mjs; echo "exit=$?"` → stderr reason, `exit=2`
+- [ ] **Task T2 — Live hook verification on Windows** (provoke each wired hook in a real attended session; proves wiring, not just scripts)
+  - AC: `rm -rf` outside repo → denied; `git push --force origin main` → denied; break a test then stop → stop blocked; observations recorded in PROGRESS.md
+- [ ] **Task T3 — Prettier rollout = designated RUNG 2 TRIAL (via /goal, operator at desk)** (devDep + `.prettierignore` covering `data/`, `tests/golden/`, `tests/fixtures/`, `dist/` + one-time reformat commit + CI `npx prettier --check .` step + wire post-edit.mjs)
+  - AC (/goal condition): `npx prettier --check .` → exits 0 AND CI green **including golden-diff and map-diff steps** (snapshots untouched); "Rung 2 trial passed" recorded in PROGRESS.md
+- [ ] **Task T4 — Minimal main ruleset via `gh api`** (block force-push `non_fast_forward` + block deletion; deliberately NO require-PR — trunk-based Rung 2 survives)
+  - AC: `gh api repos/mekyle-s/rent-yield-screener/rulesets` → lists both rules; `git push origin :main` → rejected by ruleset
+- [ ] **Task T5 — Sandbox image** (`scripts/loop/Dockerfile` base `mcr.microsoft.com/playwright` pinned to exact current tag — verify, expected `v1.61.0-noble` — + git + gh + pinned `@anthropic-ai/claude-code`; `entry.sh` = fresh clone → checkout `claude/<task>` → `claude -p` → verify push; Windows working copy NEVER mounted)
+  - AC: `docker build -t rys-loop scripts/loop` → exits 0; `docker run --rm rys-loop bash -lc 'claude --version && gh --version && git --version'` → three versions print; pinned tag recorded for ADR-0005
+- [ ] **Task T6 — Loop credentials** (SUPERVISED — Mekyle creates fine-grained PAT: single repo, Contents R/W + PRs R/W + Metadata R, 30-day expiry, NO `workflow` permission; runs `claude setup-token`; both land in `~/.claude-loop.env`, never committed)
+  - AC: in-container `gh api repos/mekyle-s/rent-yield-screener` → 200; `claude -p "reply OK"` → OK; clone + push to scratch branch succeeds
+- [ ] **Task T7 — Loop driver + smoke** (`scripts/loop/loop.sh`: preflight → iterations via `docker run --rm --init --ipc=host --env-file ~/.claude-loop.env -e CLAUDE_LOOP=1` → `LOOP:HALT` sentinel grep between iterations → stop on sentinel/cap/2 consecutive failures → `gh pr create`; plus `scripts/loop/PROMPT.md`)
+  - AC: `./scripts/loop/loop.sh --preflight-only` → exits 0; in-container `npx playwright screenshot` of `astro preview` → PNG exists; in-container hook provocation under `--dangerously-skip-permissions` → deny observed
+- [ ] **Task T7.5 — Scoped code review gate** (strong model, FRESH-CONTEXT subagent, T1–T7 diff ONLY: hooks, settings.json, Dockerfile, entry.sh, loop.sh, PROMPT.md; scope estimate stated + approval BEFORE launch; findings fixed test-first; fix diff re-reviewed. **T8 blocked until this passes.**)
+  - AC: review findings all fixed test-first; re-review of fix diff clean; `npm test` → exits 0
+- [ ] **Task T8 — Supervised Ralph dry-run** (2–3 watched iterations on `claude/dry-run` burning 2–3 mechanical findings from 13–21 — Phase 5 queue exception granted 2026-07-10; loop runs `--model sonnet` exactly as it will overnight)
+  - AC: each iteration = fresh context, ONE task, PROGRESS.md updated, atomic commit, clean exit; halt via `LOOP:HALT`; PR opened; CI green on PR
+- [ ] **Task T9 — Close-out** (`decisions/0005-autonomy-infra.md` incl. pinned Playwright tag C.1's devDep must match + bedtime-checklist appendix + Sonnet-default cost table; HQ leads.md verdicts: TDD Guard KILL, container-use KILL, Chrome DevTools MCP NOT ADOPTED-conditional, @playwright/test ADOPTED; HQ `research/phase-3/notes.md` evidence; CLAUDE.md `npm run check` claim fix; PROGRESS.md both repos)
+  - AC: all listed files exist at stated paths; leads.md shows the three new Phase 3 verdicts
+
 ## Phase C — Map + Pages
 **Exit condition:** deployed site shows interactive choropleth + metro pages from fixture data; screenshot verification passed.
 
@@ -64,3 +91,4 @@
 
 ## Dependencies
 - B.4 blocked by B.1 · C.1 blocked by B.2+B.4 · C.2 blocked by B.2 · D.* blocked by C gate · C.4 blocked by Mekyle's KE data
+- C.* blocked by Phase INFRA exit (Rung-3 infra-proven) · T3 blocked by T1 (post-edit.mjs exists) · T6 SUPERVISED · T7 blocked by T5+T6 · T8 blocked by T7.5 · first overnight run = Phase C decision, not INFRA
