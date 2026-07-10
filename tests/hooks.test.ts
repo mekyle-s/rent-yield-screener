@@ -127,6 +127,19 @@ describe("pre-bash.mjs — ALWAYS deny, any mode", () => {
       /rm|remove-item/i,
     ],
     ["force-push quoted main", 'git push --force origin "main"', /force/i],
+    // T7.5 finding 5: command-name basename forms
+    ["backslash-prefixed rm outside repo", "\\rm -rf ~", /rm|remove-item/i],
+    ["absolute-path rm outside repo", "/bin/rm -rf /etc/x", /rm|remove-item/i],
+    [
+      "usr-bin rm parent traversal",
+      "/usr/bin/rm -rf ../other",
+      /rm|remove-item/i,
+    ],
+    [
+      "pipeline-fed Remove-Item (target invisible)",
+      "Get-ChildItem C:\\Users\\other -Recurse | Remove-Item -Recurse -Force",
+      /rm|remove-item|unauditable|pipe/i,
+    ],
     // PowerShell recursive+force deletes outside the repo (matcher covers PowerShell)
     [
       "Remove-Item -Recurse -Force absolute",
@@ -281,6 +294,9 @@ describe("pre-bash.mjs — ALLOW when attended (trunk-based Rung 2 + T3 goal dep
       "Remove-Item -Force single file inside repo",
       "Remove-Item -Force scratch.txt",
     ],
+    // T7.5 finding 5: recursive+force delete WITH an explicit in-repo path token,
+    // even when piped, stays allowed (the empty-path pipeline rule must not overreach)
+    ["xargs rm -rf with explicit repo path", "echo dist | xargs rm -rf dist"],
     [
       "curl to file (no pipe)",
       "curl -sL https://example.com/data.csv -o .cache/data.csv",

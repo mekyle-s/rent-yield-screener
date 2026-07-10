@@ -100,7 +100,10 @@ const DELETE_CMD = /^(rm|remove-item|ri|del|erase|rd|rmdir)$/i;
 
 function checkDelete(tokens) {
   for (let i = 0; i < tokens.length; i++) {
-    if (!DELETE_CMD.test(tokens[i])) continue;
+    // F5 (T7.5): match by basename so \rm and /bin/rm are recognized
+    if (!DELETE_CMD.test(baseName(tokens[i]))) continue;
+    // F5 (T7.5): was this delete fed by a pipe? then its target is invisible
+    const pipedInto = tokens.slice(0, i).some((t) => SEPARATOR.test(t));
     let recursive = false;
     let force = false;
     const paths = [];
@@ -133,6 +136,12 @@ function checkDelete(tokens) {
     if (recursive && force && paths.some(dangerous))
       deny(
         "recursive+force rm/Remove-Item pointed outside the repo (absolute path, ~, .., drive root, or $env:USERPROFILE)",
+      );
+    // F5 (T7.5): recursive+force delete whose target came from a pipe (no explicit
+    // path token) is unauditable — the piped input could be anything, incl. absolute
+    if (recursive && force && pipedInto && paths.length === 0)
+      deny(
+        "recursive+force rm/Remove-Item with a pipe-fed target (path unauditable) — pass an explicit in-repo path instead",
       );
   }
 }
