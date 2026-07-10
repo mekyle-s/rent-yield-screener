@@ -6,7 +6,7 @@
 
 ## Active task
 
-**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅ T3 ✅ (RUNG 2 TRIAL PASSED); next = T4 (main ruleset).** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
+**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅ T3 ✅ (RUNG 2 TRIAL PASSED) T4 ✅; next = T5 (sandbox image).** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
 
 <details><summary>Phase B fix-pass record (all findings FIXED; test-first → fix → atomic commit each; git log fa78ca3..c9c9c16)</summary>
 1. ✅ d424071 — winding fixed at source (build-boundaries.ts `-o gj2008` = CW/d3 rings) + map:verify geometry guard (no path bbox may span the viewBox) + tests/map.test.ts
@@ -42,7 +42,9 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 
 ## Next action
 
-**T4 — minimal main ruleset via `gh api`** (block force-push `non_fast_forward` + block deletion; deliberately NO require-PR). AC: `gh api repos/mekyle-s/rent-yield-screener/rulesets` lists both rules; `git push origin :main` → rejected. Then T5 (image), T6 (SUPERVISED credentials), T7 (loop.sh), T7.5 (scoped review gate, scope estimate + approval first), T8 (dry-run), T9 (close-out).
+**T5 — sandbox image** (`scripts/loop/Dockerfile`: `mcr.microsoft.com/playwright` pinned to exact current tag, expected `v1.61.0-noble`, + git + gh + pinned `@anthropic-ai/claude-code`; `entry.sh` fresh-clone contract; working copy never mounted). Then T6 (SUPERVISED credentials), T7 (loop.sh), T7.5 (scoped review gate, scope estimate + approval first), T8 (dry-run), T9 (close-out).
+
+**T4 record — main ruleset LIVE (2026-07-10).** Ruleset `protect-main` id 18764742, enforcement active, rules `[{deletion},{non_fast_forward}]` on `~DEFAULT_BRANCH`, created via `gh api` POST. Enforcement PROVEN, not assumed: `git push origin :main` rejected (but that message is default-branch semantics, so:) probe branch temporarily included in the ruleset → force-push → **GH013 "Cannot force-push to this branch"**; deletion → **GH013 "Cannot delete this branch"**; ruleset restored to main-only, probe branch then deleted cleanly (restore-then-success re-attributes the block to the ruleset). No require-PR — trunk-based Rung 2 intact. Note: a stray empty probe commit briefly existed on local main (wrong-branch slip), reset before any push; local main == origin/main verified.
 
 **T3 record — RUNG 2 TRIAL PASSED (2026-07-10, /goal session, Mekyle at desk).** Goal condition met exactly: `npx prettier --check .` → "All matched files use Prettier code style!", exit 0; CI run on 2340c28 green END-TO-END including golden-diff (✓ ETL determinism) and map-diff (✓ Map determinism) — the one-time reformat (40 files incl. Mekyle's editor diff to transform.ts) provably touched zero snapshot bytes. Local pre-push battery: 161 tests, check 0 errors, `diff -r /tmp/t3-out tests/golden/` clean, SVG rebuild byte-identical. prettier 3.9.5 + prettier-plugin-astro 0.14.1 exact-pinned (plugin = stated scope addition: `--check .` cannot pass on .astro files without it). post-edit.mjs wired + live-verified: ugly probe file came back Prettier-formatted on disk via PostToolUse.
 
