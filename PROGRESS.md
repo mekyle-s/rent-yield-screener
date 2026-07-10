@@ -6,7 +6,7 @@
 
 ## Active task
 
-**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 DONE; next = T2 (live hook verification).** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
+**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅; next = T3 (Prettier = Rung 2 trial via /goal).** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
 
 <details><summary>Phase B fix-pass record (all findings FIXED; test-first → fix → atomic commit each; git log fa78ca3..c9c9c16)</summary>
 1. ✅ d424071 — winding fixed at source (build-boundaries.ts `-o gj2008` = CW/d3 rings) + map:verify geometry guard (no path bbox may span the viewBox) + tests/map.test.ts
@@ -31,11 +31,17 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 
 ## Last action & result
 
-2026-07-10: Phase INFRA plan approved (amendments A1–A5); ROADMAP.md § Phase INFRA persisted first (811465f). T1 done test-first: `npm test` → 110 hook cases + full suite green; fail-closed verified (malformed stdin → exit 2 `HOOK_ERROR: fail-closed`); checkPush loop confirmed appearing exactly once in pre-bash.mjs (grep -c = 1; user's terminal showed a render artifact).
+2026-07-10: **T2 live hook verification PASSED — all provocations observed in the real session transcript** (correction to an earlier assumption: hooks in `.claude/settings.json` went live mid-session without a restart; `$CLAUDE_PROJECT_DIR` substitution works on Windows):
+1. `rm -rf /nonexistent-hook-probe` (Bash tool) → `BLOCKED: recursive+force rm/Remove-Item pointed outside the repo`, tool call denied pre-execution.
+2. `git push --force --dry-run origin main` → `BLOCKED: force-push targeting main/master` (probe carried `--dry-run` as a belt so even a hook failure couldn't publish).
+3. `Remove-Item -Recurse -Force C:\nonexistent-hook-probe` via the **PowerShell tool** → same deny (matcher `Bash|PowerShell` wiring confirmed on both tools).
+4. Deliberately red probe test (`tests/stop-probe.test.ts`) + stop attempt → **Stop hook refused the stop**: "Tests failing — fix before stopping (constitution: tests-must-pass)". Probe deleted (T2 artifact, not coverage), suite re-run: 161/161 green.
+5. Organic bonus deny during T1's own AC run: pipe-to-shell pattern in an `echo`'d payload string → `BLOCKED: curl/wget/iwr/irm piped into a shell` (conservative string-matching, known+accepted behavior; hook-testing payloads go via files, not inline strings).
+T1 (earlier same day): hooks layer test-first, 82 RED → GREEN, +28 Mekyle cases (bare-force push, PS Remove-Item aliases, iwr/irm→iex) 26 RED → 110/110 GREEN, committed ad0dd9e.
 
 ## Next action
 
-**T2 — live hook verification on Windows.** The hooks in `.claude/settings.json` are NOT loaded into the current session (hook config snapshots at session start) → needs a fresh session (or /hooks review) BEFORE provoking: `rm -rf` outside repo → denied; `git push --force origin main` → denied; break a test then stop → stop blocked. Record observed transcript behavior here. Then T3 (Prettier = Rung 2 trial via /goal), T4 (ruleset), T5 (image), T6 (SUPERVISED credentials), T7 (loop.sh), T7.5 (scoped review gate, scope estimate + approval first), T8 (dry-run), T9 (close-out).
+**T3 — Prettier rollout = designated Rung 2 trial, via /goal, Mekyle at desk.** Goal condition: `npx prettier --check .` exits 0 AND CI green including golden-diff + map-diff steps. Scope: prettier devDep + `.prettierignore` (`data/`, `tests/golden/`, `tests/fixtures/`, `dist/`) + one-time reformat commit + CI check step + wire post-edit.mjs into settings.json. NOTE: an editor format-on-save diff to `src/etl/transform.ts` (pure formatting, Mekyle's editor) is sitting uncommitted in the working tree — T3's reformat commit absorbs it. Then T4 (ruleset), T5 (image), T6 (SUPERVISED credentials), T7 (loop.sh), T7.5 (scoped review gate, scope estimate + approval first), T8 (dry-run), T9 (close-out).
 
 - GUARDRAIL (Mekyle, 2026-07-08): before launching >5 subagents OR any full-codebase/full-phase review, state estimated scope and WAIT for approval (saved to memory: subagent-scope-approval).
 
