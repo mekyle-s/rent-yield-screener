@@ -66,13 +66,15 @@ for i in $(seq 1 "$CAP"); do
   else
     consecutive_failures=0
   fi
-  # sentinel check: read PROGRESS.md as committed on the remote branch
+  # F7 (T7.5): sentinel lives in the ITERATION'S COMMIT MESSAGE, not PROGRESS.md
+  # content. A per-commit signal can't go stale across resumes and can't collide
+  # with prose that merely mentions the token. Match only a message whose FIRST
+  # line begins with the sentinel.
   if git -C "$REPO_DIR" fetch --quiet origin "$BRANCH" 2>/dev/null; then
-    if git -C "$REPO_DIR" show "FETCH_HEAD:PROGRESS.md" 2>/dev/null | grep -q "LOOP:HALT"; then
-      halted=$(git -C "$REPO_DIR" show "FETCH_HEAD:PROGRESS.md" | grep "LOOP:HALT" | head -1)
-      log "sentinel: $halted — stopping"
-      break
-    fi
+    msg=$(git -C "$REPO_DIR" show -s --format=%s FETCH_HEAD 2>/dev/null || true)
+    case "$msg" in
+      LOOP:HALT*) log "sentinel: $msg — stopping"; halted="$msg"; break ;;
+    esac
   fi
 done
 

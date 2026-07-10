@@ -19,8 +19,12 @@ context dies when you exit; the ONLY state that survives is what you commit.
 
 ## Halt conditions
 
-Write `LOOP:HALT <one-line reason>` into the `## Loop control` section of
-PROGRESS.md, commit, and exit when ANY of these holds:
+To halt, make your final commit's message FIRST LINE begin with
+`LOOP:HALT <one-line reason>` (also note the reason in PROGRESS.md's
+`## Loop control` section for the human). The driver reads the halt signal from
+the commit subject — a per-iteration signal that never goes stale — so an
+ordinary prose mention of the token elsewhere will NOT stop the loop. Halt when
+ANY of these holds:
 
 - the tasked scope is complete (no eligible Next action remains);
 - you are blocked on anything requiring a human (SUPERVISED task, missing
