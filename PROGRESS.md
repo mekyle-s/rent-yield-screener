@@ -48,7 +48,7 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 
 **T8 dry-run task queue (Phase 5 exception granted 2026-07-10; loop does ONE per iteration, then updates this Next-action, then halts when the queue is empty):**
 
-1. **Finding #14** — `scripts/etl/trim-fixtures.ts`: `fields()` is a verbatim copy of `splitCsvLine`. Replace it with an import of the canonical splitter from `src/etl/csv.ts` (do NOT change behavior). AC: `grep -n "function fields" scripts/etl/trim-fixtures.ts` → no match (local helper gone); `npm test` → exits 0; `npm run check` → 0 errors. After committing, set this Next-action to Finding #19.
+1. ~~Finding #14~~ ✅ DONE this iteration (2026-07-11): `scripts/etl/trim-fixtures.ts` local `fields()` (verbatim copy of `splitCsvLine`) removed; now imports `splitCsvLine` from `../../src/etl/csv` (matches `build-crosswalk.ts` pattern) and calls it in `load()`. No behavior change. AC proof: `grep -n "function fields" scripts/etl/trim-fixtures.ts` → no match, exit 1; `npm test` → 216/216 passed, exit 0; `npm run check` → 0 errors, 0 warnings, exit 0.
 2. **Finding #19** — `scripts/etl/fetch.ts` (~line 82): the source downloads are awaited sequentially. Rewrite the loop to fetch concurrently with `Promise.all` (preserve order, error handling, and the `FETCH_INTEGRITY:` behavior). AC: `npm test` → exits 0; `npm run check` → 0 errors. After committing, the queue is empty → halt.
 3. **Queue empty** → make the final commit's subject begin with `LOOP:HALT dry-run queue complete`.
 

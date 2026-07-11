@@ -11,32 +11,10 @@
 //           + every row with a blank trailing month (both series, ZHVI rows of
 //             ZORI's blank-trailing ZIPs included so the join sees them)
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { splitCsvLine } from "../../src/etl/csv";
 
 const RAW = ".cache/zillow-raw";
 const OUT = "tests/fixtures";
-
-// Quote-aware CSV field splitter (RegionName can contain commas, e.g. "New York, NY").
-function fields(line: string): string[] {
-  const out: string[] = [];
-  let cur = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (inQuotes) {
-      if (c === '"' && line[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else if (c === '"') inQuotes = false;
-      else cur += c;
-    } else if (c === '"') inQuotes = true;
-    else if (c === ",") {
-      out.push(cur);
-      cur = "";
-    } else cur += c;
-  }
-  out.push(cur);
-  return out;
-}
 
 type Row = {
   line: string;
@@ -53,7 +31,7 @@ function load(file: string): { header: string; rows: Row[] } {
     .filter((l) => l.length > 0);
   const [header, ...rest] = lines;
   const rows = rest.map((line) => {
-    const f = fields(line);
+    const f = splitCsvLine(line);
     return {
       line,
       id: f[0],
