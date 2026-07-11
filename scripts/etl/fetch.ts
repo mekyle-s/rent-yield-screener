@@ -82,12 +82,18 @@ async function main() {
   const outFlag = args.indexOf("--out");
   const outDir = outFlag !== -1 ? args[outFlag + 1] : ".cache/zillow-raw";
   mkdirSync(outDir, { recursive: true });
-  for (const s of SOURCES) {
-    const body = await fetchOne(s.url, s.headerStartsWith);
+  // Sources are independent URLs — fetch concurrently (finding #19). Promise.all
+  // preserves input order in its result array regardless of completion order, so
+  // writes/logs below still happen in SOURCES order even though requests race.
+  const bodies = await Promise.all(
+    SOURCES.map((s) => fetchOne(s.url, s.headerStartsWith)),
+  );
+  SOURCES.forEach((s, i) => {
+    const body = bodies[i];
     const dest = join(outDir, `${s.name}.csv`);
     writeFileSync(dest, body);
     console.log(`fetched ${s.name} -> ${dest} (${body.length} bytes)`);
-  }
+  });
 }
 
 // Never let a rejection escape as an unhandled promise (finding #9): any error
