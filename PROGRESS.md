@@ -6,7 +6,11 @@
 
 ## Active task
 
-**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅ T3 ✅ (RUNG 2 TRIAL PASSED) T4 ✅ T5 ✅ T6 ✅ T7 ✅ T7.5 ✅; T8 LAUNCHING (supervised dry-run on claude/dry-run, cap 3, --model sonnet). Loop reads the task queue below.** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
+**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅ T3 ✅ (RUNG 2 TRIAL PASSED) T4 ✅ T5 ✅ T6 ✅ T7 ✅ T7.5 ✅; T8 attempt-1 exposed+fixed a Git-Bash path-mangling bug in loop.sh (`/entry.sh`→`//entry.sh`); relaunching. Loop reads the task queue below.**
+
+<!-- T8 attempt-1 (2026-07-10): loop preflight ALL GREEN; iterations 1&2 failed 127 because MSYS rewrote the `/entry.sh` docker arg to `C:/Program Files/Git/entry.sh`. Safety machinery worked perfectly: 2-consecutive-failure breaker stopped the loop, no branch pushed, no PR, trunk untouched. Fix: `//entry.sh` (MSYS-safe), verified in isolation (entry.sh executed → hit its own branch guard). This is precisely the Windows-host integration bug the T7.5 static/Linux review could not catch — the supervised dry-run earning its place. -->
+
+Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
 
 <details><summary>Phase B fix-pass record (all findings FIXED; test-first → fix → atomic commit each; git log fa78ca3..c9c9c16)</summary>
 1. ✅ d424071 — winding fixed at source (build-boundaries.ts `-o gj2008` = CW/d3 rings) + map:verify geometry guard (no path bbox may span the viewBox) + tests/map.test.ts

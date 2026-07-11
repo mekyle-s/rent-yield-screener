@@ -53,10 +53,15 @@ consecutive_failures=0
 for i in $(seq 1 "$CAP"); do
   log "=== iteration $i/$CAP on $BRANCH ==="
   set +e
+  # T8: Git Bash (MSYS) rewrites a leading-slash arg like `/entry.sh` into a
+  # Windows path (C:/Program Files/Git/entry.sh) before it reaches docker. The
+  # `//entry.sh` double-slash is left untouched by MSYS and resolves to
+  # `/entry.sh` inside the Linux container. $BRANCH (claude/…) has no leading
+  # slash, so it passes through unmangled.
   docker run --rm --init --ipc=host \
     --env-file "$ENV_FILE" \
     -e CLAUDE_LOOP=1 \
-    "$IMG" /entry.sh "$BRANCH"
+    "$IMG" //entry.sh "$BRANCH"
   rc=$?
   set -e
   if [ "$rc" -ne 0 ]; then
