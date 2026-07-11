@@ -6,7 +6,7 @@ Free ZIP/metro-level price-to-rent choropleth + programmatic metro SEO pages, re
 
 - Dev server: `npm run dev`
 - Tests: `npm test`
-- Typecheck + lint: `npm run check`
+- Typecheck: `npm run check` (astro check) · Format: `npx prettier --check .` — CI enforces both
 - Full ETL on fixtures: `npm run etl -- --input tests/fixtures --out /tmp/out`
 - Deploy: push to main → GitHub Actions → Cloudflare Pages
 
