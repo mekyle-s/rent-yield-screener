@@ -6,7 +6,7 @@
 
 ## Active task
 
-**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅ T3 ✅ (RUNG 2 TRIAL PASSED) T4 ✅ T5 ✅ T6 ✅ T7 ✅ T7.5 ✅ (review gate PASSED, 0 blocking); next = T8 (supervised dry-run — needs Mekyle at desk to watch).** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
+**PHASE INFRA (Playbook Phase 3) IN PROGRESS — plan APPROVED w/ amendments A1–A5 + full-send execution notes (Mekyle, 2026-07-10). T1 ✅ T2 ✅ T3 ✅ (RUNG 2 TRIAL PASSED) T4 ✅ T5 ✅ T6 ✅ T7 ✅ T7.5 ✅; T8 LAUNCHING (supervised dry-run on claude/dry-run, cap 3, --model sonnet). Loop reads the task queue below.** Task list + ACs live in ROADMAP.md § Phase INFRA (persisted first, commit 811465f). Model plan this week: attended T1–T7 + T7.5 review on strong model (headroom exception); ADR-0005 records Sonnet as standing default; T8 loop `--model sonnet` exactly as it runs overnight.
 
 <details><summary>Phase B fix-pass record (all findings FIXED; test-first → fix → atomic commit each; git log fa78ca3..c9c9c16)</summary>
 1. ✅ d424071 — winding fixed at source (build-boundaries.ts `-o gj2008` = CW/d3 rings) + map:verify geometry guard (no path bbox may span the viewBox) + tests/map.test.ts
@@ -42,7 +42,13 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 
 ## Next action
 
-**T8 — supervised Ralph dry-run (2–3 watched iterations on `claude/dry-run`, findings 13–21, exception granted).** BLOCKED until the re-reviewer confirms the round-2 fix diff is clean (0 blocking). AC (V6): each iteration = fresh context, ONE task, PROGRESS updated, atomic commit, clean exit; halt via commit-subject `LOOP:HALT`; PR opened; CI green on PR. Then T9 (close-out).
+**T8 dry-run task queue (Phase 5 exception granted 2026-07-10; loop does ONE per iteration, then updates this Next-action, then halts when the queue is empty):**
+
+1. **Finding #14** — `scripts/etl/trim-fixtures.ts`: `fields()` is a verbatim copy of `splitCsvLine`. Replace it with an import of the canonical splitter from `src/etl/csv.ts` (do NOT change behavior). AC: `grep -n "function fields" scripts/etl/trim-fixtures.ts` → no match (local helper gone); `npm test` → exits 0; `npm run check` → 0 errors. After committing, set this Next-action to Finding #19.
+2. **Finding #19** — `scripts/etl/fetch.ts` (~line 82): the source downloads are awaited sequentially. Rewrite the loop to fetch concurrently with `Promise.all` (preserve order, error handling, and the `FETCH_INTEGRITY:` behavior). AC: `npm test` → exits 0; `npm run check` → 0 errors. After committing, the queue is empty → halt.
+3. **Queue empty** → make the final commit's subject begin with `LOOP:HALT dry-run queue complete`.
+
+Do NOT touch any other finding (13,15–18,20,21) or any file outside the one named per task — those stay queued for Phase 5. This is the T8 supervised dry-run: prove the loop MECHANICS (fresh context, ONE task, PROGRESS updated, atomic commit, clean exit, commit-subject halt, PR), not broad cleanup. Runs `--model sonnet` (entry.sh:40). T9 (close-out) follows.
 
 **T7.5 record — scoped review gate (A5), APPROVED by Mekyle, 2 rounds.** Round 1 (reviewer aaa9a7ec9268959c3, T1–T7 diff): 6 blocking + 1 below-cap. All 7 fixed test-first, 1 atomic commit each (02734be F1 Bash-side guardrail-write deny via shared protected.mjs; 4e1264d F2 refs/heads/main; a9ee625 F3 --mirror/--all; 069528f F4 quoted values; 71e2a3f F5 \\rm//bin/rm + pipe-fed delete; f45a7c2 F6 no PAT in git URL — gh helper + env -u GH_TOKEN, proven in-container; 2fc005b F7 halt sentinel → commit-subject). Round 2 re-review (reviewer aa8b5f16b5bb2b849, fix diff 1d38cc3..2fc005b): found 2 NEW blocking bugs the fix pass introduced — quotes stripped at value sites but NOT flag-classification sites (`git push "--force" origin main` slipped), and redirect check saw only the first `>` (`echo a>safe && echo b>.claude/x` slipped). Both fixed b8c84f2 test-first (strip quotes globally at tokenization; scan ALL redirects). npm test 216, prettier clean, CI green on b8c84f2. **Round-2 confirmation PASSED (same re-reviewer, 2026-07-10): both new blocking bugs VERIFIED-FIXED, no regression, 0 blocking — clean to proceed to T8.** T7.5 CLOSED. Net: 9 findings fixed test-first across 2 rounds, hook matrix 82→216 tests.
 
