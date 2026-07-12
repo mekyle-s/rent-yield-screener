@@ -6,7 +6,7 @@
 
 ## Active task
 
-**PHASE INFRA (Playbook Phase 3) ✅ COMPLETE 2026-07-11 — Rung-3 infra-proven. T1–T9 all done (T8 dry-run PASSED all V6 criteria, PR #1 merged, T7.5 review 0 blocking). NEXT GATE = Phase C plan checkpoint (present Phase C plan → Mekyle approval BEFORE building; NO autonomous build past the plan gate).** Design: `decisions/0005-autonomy-infra.md`. First real overnight Rung-3 run is a Phase C decision (bedtime checklist in ADR-0005), never launched from this phase.
+**PHASE C ACTIVE — plan v3 APPROVED by Mekyle 2026-07-11 (plan checkpoint gate PASSED; +1 approved amendment: C.1's Playwright AC prepends `npm run build &&` with webServer preview-only/`reuseExistingServer: true`).** Order: C.0 ✅ (this commit) → C.1 (ATTENDED) → C.2a (ATTENDED CI edit) → C.2 (Rung-3 candidate) → C.3 (Rung-3 candidate) → C.3b (ATTENDED CI edit); C.4 independent + BLOCKED on the GKP export. Tasks + exact ACs: ROADMAP.md § Phase C. Phase INFRA closed 2026-07-11 (Rung-3 infra-proven, `decisions/0005-autonomy-infra.md`); first overnight Rung-3 run requires the ADR-0005 bedtime checklist + watching iteration 1.
 
 <!-- T8 RESULT (2026-07-11): dry-run PASSED all V6 criteria. Attempt-1 (2026-07-10) exposed+fixed a Git-Bash MSYS path-mangling bug (`/entry.sh`→`//entry.sh`, commit 72fd660); the 2-consecutive-failure breaker stopped it cleanly, no branch/PR/trunk touched — the Windows-host integration bug the static/Linux T7.5 review couldn't catch. Relaunch: 3 iterations on claude/dry-run, --model sonnet. Iter1 → #14 (dedupe splitCsvLine), atomic commit 2ab6ef6, one-task-only, updated Next-action to #19, exited; driver pushed+verified. Iter2 → #19 (Promise.all in fetch.ts), commit 7ec1d4e. Iter3 → empty queue, no code change, commit 5e5a1c5 subject `LOOP:HALT dry-run queue complete`; driver read the commit-subject sentinel and stopped. PR #1 opened; PR CI green (verify pass + Cloudflare Pages preview pass). main UNTOUCHED (still 72fd660). Both diffs reviewed correct. Fresh-context handoff via committed PROGRESS proven across all 3 iterations. -->
 
@@ -46,7 +46,7 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 
 ## Next action
 
-**PHASE INFRA CLOSED — next is the Phase C plan checkpoint.** Draft the Phase C plan (C.1 SVG choropleth page + searchable metro index, unblocked since B.2+B.4; then C.2 metro pages, C.3 SEO plumbing incl. the not-yet-existing `scripts/check-seo.ts`, C.4 SUPERVISED SEO-scale on Mekyle's KE data), present it to Mekyle, and WAIT for approval before building. C.1's `@playwright/test` devDep MUST pin `1.61.1` (matches the sandbox image, ADR-0005). The Rung-3 loop is available for Phase C execution once a plan is approved — first overnight run runs the ADR-0005 bedtime checklist. Findings 13,15–18,20,21 remain queued for Phase 5.
+**C.0 DONE (this commit) — next: C.1 SVG choropleth page + searchable metro index (ATTENDED, Rung 2).** C.1 preconditions: `@playwright/test` devDep pinned EXACTLY `1.61.1` (ADR-0005 image pin); one-time on this machine `npx playwright install chromium`; `playwright.config.ts` webServer preview-only (`command: npm run preview`, `reuseExistingServer: true`); vitest excludes `tests/e2e/**`. Then C.2a (ATTENDED CI-gate widening) → C.2 → C.3 (Rung-3 candidates) → C.3b (ATTENDED). C.4 SUPERVISED SEO-scale runs on the free Google Keyword Planner export at `../Bus_Idea_Project/research/phase-2/gkp-export.csv` (lower-bound rule) — blocked until Mekyle produces that file. Findings 13,15–18,20,21 remain queued for Phase 5.
 
 <details><summary>T9 close-out record (2026-07-11) — Phase INFRA done</summary>
 Written: product `decisions/0005-autonomy-infra.md` (full design + pinned tag v1.61.1-noble + bedtime checklist + Sonnet-default cost table); HQ `research/leads.md` Phase 3 CLOSED (TDD Guard KILL, container-use KILL, Chrome DevTools MCP NOT ADOPTED-conditional, @playwright/test ADOPTED); HQ `research/phase-3/notes.md` (V1–V6 evidence + review + integration bugs + cost actuals); CLAUDE.md `npm run check` wording fixed (typecheck + separate prettier --check); ROADMAP T1–T9 checked; HQ PROGRESS.md updated at phase close.
@@ -86,9 +86,9 @@ These proved the loop MECHANICS (fresh context, ONE task, PROGRESS updated, atom
 ## Blockers / open questions
 
 - ~~gh CLI not installed~~ RESOLVED: gh 2.96.0 present (verified 2026-07-07).
-- Task C.4 (SEO scale) blocked on Mekyle's Keywords Everywhere export → judged by pre-registered rule.
+- Task C.4 (SEO scale) blocked on the free Google Keyword Planner export at `../Bus_Idea_Project/research/phase-2/gkp-export.csv` → judged by the pre-registered lower-bound rule.
 - B.4 crosswalk source must be stated to Mekyle before building (approval note 4).
 
 ## Loop control
 
-**Phase INFRA CLOSED 2026-07-11. Rung 3 available but IDLE.** Next stop condition: **Phase C plan checkpoint** — draft the Phase C plan, present to Mekyle, WAIT for approval before building. No autonomous build past the plan gate. A Rung-3 loop may execute approved Phase C tasks only after its plan is approved and the ADR-0005 bedtime checklist passes; the first overnight run is a Phase C decision, never launched from this phase.
+**Phase C plan v3 APPROVED 2026-07-11 — plan gate PASSED.** Rung 3 is available for C.2 and C.3 ONLY, each launch preceded by the ADR-0005 bedtime checklist with iteration 1 watched end-to-end. C.1 is ATTENDED — never loop it (UI judgment call). SUPERVISED/attended tasks (C.2a, C.3b, C.4) never loop — CI edits are hook- and PAT-blocked in loop mode by construction. Next stop condition: **C-gate** — deployed site + screenshot verification + Mekyle review.

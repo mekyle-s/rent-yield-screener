@@ -64,19 +64,38 @@
 - [x] **Task T9 — Close-out** (`decisions/0005-autonomy-infra.md` incl. pinned Playwright tag C.1's devDep must match + bedtime-checklist appendix + Sonnet-default cost table; HQ leads.md verdicts: TDD Guard KILL, container-use KILL, Chrome DevTools MCP NOT ADOPTED-conditional, @playwright/test ADOPTED; HQ `research/phase-3/notes.md` evidence; CLAUDE.md `npm run check` claim fix; PROGRESS.md both repos)
   - AC: all listed files exist at stated paths; leads.md shows the three new Phase 3 verdicts
 
-## Phase C — Map + Pages
+## Phase C — Map + Pages (plan v3 APPROVED by Mekyle 2026-07-11 — plan checkpoint gate passed)
 
-**Exit condition:** deployed site shows interactive choropleth + metro pages from fixture data; screenshot verification passed.
+**Exit condition:** deployed site shows interactive choropleth + metro pages from fixture data; screenshot verification passed. Phase-gate proof: `curl -sL -o /dev/null -w "%{http_code}" https://<project>.pages.dev/metro/<first-slug>/` → prints `200`; national-view + one metro-page screenshot + second fresh-context confirmation pass; CI green incl. golden-diff, map-diff, prettier, widened attribution step, and (post-C.3b) check-seo.
 
-- [ ] **Task C.1 — SVG choropleth page (metro level) + searchable metro index** (inline prebuilt SVG from B.4; hover/click via tiny vanilla JS)
-  - AC: E2E (Playwright): page loads, SVG renders with >500 metro paths, clicking a metro navigates/shows its ratio → test green
-  - AC: screenshot of national view captured + second fresh-context pass confirms choropleth visibly colored
-- [ ] **Task C.2 — Metro page template** (ratio, 12-mo trend, top-ZIP table, Zillow attribution)
-  - AC: `npm run build` → one HTML page per fixture metro; `grep -L "Data Provided by Zillow Group" dist/metro/*.html` → empty (100% attribution, constitution V)
-- [ ] **Task C.3 — SEO plumbing** (sitemap, robots.txt.ts, canonical, meta + default OG, escaped JSON-LD)
-  - AC: `npx tsx scripts/check-seo.ts dist/` → all pages pass (title, description, canonical, JSON-LD present AND `<`/`>` escaped — gate critique #8)
-- [ ] **Task C.4 — SEO SCALE DECISION** (SUPERVISED — gated on pre-registered keyword rule in HQ Decision Doc)
-  - AC: Mekyle's KE data judged against pre-committed thresholds → metro page count set (400 / 50 / pivot)
+- [x] **Task C.0 — keyword instrument correction (GKP)** (instrument = free Google Keyword Planner export at `../Bus_Idea_Project/research/phase-2/gkp-export.csv`, judged by the LOWER-BOUND rule — GKP ranges read at their lower bounds — against the unchanged pre-registered thresholds in HQ `01_idea_selection/02-decision.md`; historical records in ADRs/ledgers untouched; same commit persists the approved Phase C plan into this section)
+  - AC: `git grep -inE "[k]eywords everywhere|\b[k]e\b" -- "*.md" | wc -l` → prints exactly `0`
+  - AC: `git grep -q "research/phase-2/gkp-export.csv" -- ROADMAP.md; echo "exit=$?"` → prints `exit=0`; same command for PROGRESS.md → prints `exit=0`
+- [ ] **Task C.1 — SVG choropleth page (metro level) + searchable metro index** (ATTENDED Rung 2 — screenshot judgment is a UI call. Inline prebuilt SVG from B.4; hover tooltip + click reveals that metro's ratio IN-PAGE (tooltip/panel), NOT navigation — metro pages arrive in C.2; hrefs to `/metro/<slug>/` may exist but are not asserted. Replaces the skeleton `index.astro` incl. its `new Date()` stamp; data from the fixture-derived latest.json. Playwright arrives here: `@playwright/test` devDep pinned EXACTLY `1.61.1` (ADR-0005 image pin), `playwright.config.ts` testDir `tests/e2e` + webServer PREVIEW-ONLY (`command: npm run preview`, `reuseExistingServer: true` — the AC's build is the only build; the test never serves a missing or stale `dist/`) + chromium only, `test:e2e` npm script, vitest excludes `tests/e2e/**`. Precondition, one-time on this machine: `npx playwright install chromium`.)
+  - AC: `node -e "process.stdout.write(require('./package.json').devDependencies['@playwright/test'])"` → prints exactly `1.61.1`
+  - AC: `npm run build && npx playwright test --reporter=line; echo "exit=$?"` → prints `exit=0`; spec asserts (a) SVG present with exactly 15 `path[data-region-id]` elements, (b) clicking a metro path reveals that metro's ratio in-page
+  - AC: `npm run build && grep -o 'data-region-id' dist/index.html | wc -l` → prints exactly `15` (occurrence count, not `grep -c` line count — compressHTML can emit one line)
+  - AC: `npm test; echo "exit=$?"` → prints `exit=0` (vitest untouched by e2e specs)
+  - AC (SUPERVISED element): national-view screenshot captured + second fresh-context pass confirms the choropleth is visibly colored; recorded in PROGRESS.md
+- [ ] **Task C.2a — widen CI attribution gate to recursive** (ATTENDED Rung 2 micro-task, ~one line — loop is hook- and PAT-blocked from `.github/**`. File selection becomes `grep -rL "Data Provided by Zillow Group" --include="*.html" dist/metro`; the glob-shaped `if ls dist/metro/*.html` guard becomes a directory-existence guard `if [ -d dist/metro ]` so the step still passes while `dist/metro` does not exist yet. Pushed with Mekyle's credentials.)
+  - AC: `grep -c -- "grep -rL" .github/workflows/ci.yml` → prints exactly `1`
+  - AC: `gh run watch $(gh run list --limit 1 --json databaseId -q ".[0].databaseId") --exit-status; echo "exit=$?"` → prints `exit=0` on that push (step passes with `dist/metro` still absent)
+- [ ] **Task C.2 — Metro page template** (Rung-3 loop candidate. One page per fixture metro at `src/pages/metro/[slug].astro` — Astro default DIRECTORY output, `dist/metro/<slug>/index.html`; clean extensionless URLs are the product decision for an SEO-first site. Shows ratio, 12-mo trend sparkline (inline SVG from the monthly series), top-ZIP table (fixture zips joined by metro), attribution EXACT string `Data Provided by Zillow Group` — verbatim what CI greps. Index page exposes `data-snapshot-month="YYYY-MM"` from meta.snapshotMonth (D.2 pre-requirement lands here).)
+  - AC: `npm run build && find dist/metro -name "*.html" | wc -l` → prints exactly `15`
+  - AC: `grep -rL "Data Provided by Zillow Group" --include="*.html" dist/metro | wc -l` → prints exactly `0` (identical string + recursive selection to the C.2a-widened CI step; constitution V)
+  - AC: `grep -o 'data-snapshot-month="2026-05"' dist/index.html | wc -l` → prints exactly `1` (golden snapshotMonth; D.2 hook in place)
+  - AC: `npm test; echo "exit=$?"` → prints `exit=0`
+- [ ] **Task C.3 — SEO plumbing: site artifacts + checker, NO CI edit** (Rung-3 loop candidate; the CI step is C.3b — loop hook denies `.github/**` and the loop PAT lacks `workflow` permission. Sitemap via `@astrojs/sitemap` → `dist/sitemap-index.xml`; `robots.txt` pointing at it; canonical; meta description + default OG on every page; JSON-LD with `<`/`>`/`&` escaped in the serializer before `set:html` (gate critique #8). Writes `scripts/check-seo.ts` + a deliberately-bad fixture in `tests/fixtures/seo-invalid/` and a test asserting the checker FAILS on it — non-vacuous by construction. ACs fresh-clone-safe; sitemap/robots ACs run after the first AC in the same iteration so `dist/` exists.)
+  - AC: `npm run build && npx tsx scripts/check-seo.ts dist/; echo "exit=$?"` → prints `SEO_OK pages=16` then `exit=0` (15 metro pages + index; per page: title, meta description, canonical, JSON-LD present AND no raw `<`/`>` inside the JSON-LD payload)
+  - AC: `npx tsx scripts/check-seo.ts tests/fixtures/seo-invalid/; echo "exit=$?"` → stderr contains `SEO_VIOLATION:` and prints `exit=1` (negative self-test; subdir keeps B.1's `ls tests/fixtures/*.csv | wc -l` → 4 true — same pattern as `invalid/`)
+  - AC: `ls dist/sitemap-index.xml` → exit 0; `grep -c "Sitemap:" dist/robots.txt` → prints exactly `1`
+  - AC: `npm test; echo "exit=$?"` → prints `exit=0`
+- [ ] **Task C.3b — check-seo CI step** (ATTENDED Rung 2, one line of YAML pushed with Mekyle's credentials: a single `run:` line with NO `name:` line — `- run: npx tsx scripts/check-seo.ts dist/` after Build — so the string `check-seo` appears exactly once in the workflow file and the AC below stays true. Runs after C.3 merges.)
+  - AC: `grep -c "check-seo" .github/workflows/ci.yml` → prints exactly `1`
+  - AC: `gh run watch $(gh run list --limit 1 --json databaseId -q ".[0].databaseId") --exit-status; echo "exit=$?"` → prints `exit=0` on the push that adds the step
+- [ ] **Task C.4 — SEO SCALE DECISION** (SUPERVISED, never loops — BLOCKED until `../Bus_Idea_Project/research/phase-2/gkp-export.csv` exists (Mekyle produces it manually from the free Google Keyword Planner run; list + steps pre-registered in HQ `research/phase-2/keyword-export-list.md`). When unblocked: read every GKP range at its LOWER bound, aggregate head terms + city long-tail sample, judge against the unchanged pre-registered thresholds in HQ `01_idea_selection/02-decision.md` — ≥5K/mo head + ≥2/mo city avg → 400-metro build · 1.5K–5K head → top-50 curated · <1.5K head + dead long-tail → PIVOT, SEO demoted · ambiguous (±20% of a boundary or implausible zeros) → one escalation to the reserved $129 Ahrefs month, whose numbers bind. Decision recorded in the HQ decision doc + this repo.)
+  - AC (unblock gate): `test -f "../Bus_Idea_Project/research/phase-2/gkp-export.csv"; echo "exit=$?"` → prints `exit=0` (as of 2026-07-11 it prints `exit=1` — that is the blocked state)
+  - AC (decision recorded): `grep -Ec "C\.4 DECISION: (400|50|PIVOT)" PROGRESS.md` → prints exactly `1` (the line also cites the lower-bound head-term and city-avg numbers used)
 
 ## Phase D — Production Data + Cron
 
@@ -84,6 +103,7 @@
 
 - [ ] **Task D.1 — Full ETL on live data** (all metros per C.4 decision + ZIP data for top-ZIP tables; no ZIP map — ADR-0004)
   - AC: `npm run etl:live && npm run etl:validate` → exits 0; spot-check 3 known metros against Zillow's published values (±1%)
+  - NOTE (plan v3, 2026-07-11): the ">500 metro paths" sanity check lives HERE, relocated from C.1 — the fixture map has exactly 15 paths; verify on the live build: `grep -o 'data-region-id' data/map/metro-map.live.svg | wc -l` → prints a number >500
 - [ ] **Task D.2 — Monthly GitHub Actions cron** (fetch → transform → validate → rebuild SVG → commit latest.json + tag → push; Pages auto-deploys — built-in GITHUB_TOKEN only, no new secrets)
   - AC: `gh workflow run refresh.yml && sleep 10 && gh run watch $(gh run list --workflow=refresh.yml --limit 1 --json databaseId -q ".[0].databaseId") --exit-status` → exits 0
   - AC: `curl -s https://rent-yield-screener.pages.dev/ | grep -o 'data-snapshot-month="[0-9]\{4\}-[0-9]\{2\}"'` → prints the same `YYYY-MM` as `jq -r .meta.snapshotMonth data/latest.json` (the index page template MUST expose `data-snapshot-month` — requirement lands in C.2)
@@ -96,5 +116,5 @@
 
 ## Dependencies
 
-- B.4 blocked by B.1 · C.1 blocked by B.2+B.4 · C.2 blocked by B.2 · D.* blocked by C gate · C.4 blocked by Mekyle's KE data
+- B.4 blocked by B.1 · C.1 blocked by B.2+B.4 · C.2a blocked by C.1 · C.2 blocked by B.2+C.2a · C.3b blocked by C.3 · D.\* blocked by C gate · C.4 blocked on `../Bus_Idea_Project/research/phase-2/gkp-export.csv` existing (Mekyle produces it manually)
 - C.* blocked by Phase INFRA exit (Rung-3 infra-proven) · T3 blocked by T1 (post-edit.mjs exists) · T6 SUPERVISED · T7 blocked by T5+T6 · T8 blocked by T7.5 · first overnight run = Phase C decision, not INFRA
