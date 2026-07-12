@@ -6,7 +6,7 @@
 
 ## Active task
 
-**PHASE C ACTIVE — plan v3 APPROVED by Mekyle 2026-07-11 (plan checkpoint gate PASSED; +1 approved amendment: C.1's Playwright AC prepends `npm run build &&` with webServer preview-only/`reuseExistingServer: true`).** Order: C.0 ✅ (this commit) → C.1 (ATTENDED) → C.2a (ATTENDED CI edit) → C.2 (Rung-3 candidate) → C.3 (Rung-3 candidate) → C.3b (ATTENDED CI edit); C.4 independent + BLOCKED on the GKP export. Tasks + exact ACs: ROADMAP.md § Phase C. Phase INFRA closed 2026-07-11 (Rung-3 infra-proven, `decisions/0005-autonomy-infra.md`); first overnight Rung-3 run requires the ADR-0005 bedtime checklist + watching iteration 1.
+**PHASE C ACTIVE — plan v3 APPROVED by Mekyle 2026-07-11 (plan checkpoint gate PASSED; +1 approved amendment: C.1's Playwright AC prepends `npm run build &&` with webServer preview-only/`reuseExistingServer: true`).** Order: C.0 ✅ ea06aee → C.1 ✅ (this commit) → C.2a (ATTENDED CI edit, NEXT) → C.2 (Rung-3 candidate) → C.3 (Rung-3 candidate) → C.3b (ATTENDED CI edit); C.4 independent + BLOCKED on the GKP export. Tasks + exact ACs: ROADMAP.md § Phase C. Phase INFRA closed 2026-07-11 (Rung-3 infra-proven, `decisions/0005-autonomy-infra.md`); first overnight Rung-3 run requires the ADR-0005 bedtime checklist + watching iteration 1.
 
 <!-- T8 RESULT (2026-07-11): dry-run PASSED all V6 criteria. Attempt-1 (2026-07-10) exposed+fixed a Git-Bash MSYS path-mangling bug (`/entry.sh`→`//entry.sh`, commit 72fd660); the 2-consecutive-failure breaker stopped it cleanly, no branch/PR/trunk touched — the Windows-host integration bug the static/Linux T7.5 review couldn't catch. Relaunch: 3 iterations on claude/dry-run, --model sonnet. Iter1 → #14 (dedupe splitCsvLine), atomic commit 2ab6ef6, one-task-only, updated Next-action to #19, exited; driver pushed+verified. Iter2 → #19 (Promise.all in fetch.ts), commit 7ec1d4e. Iter3 → empty queue, no code change, commit 5e5a1c5 subject `LOOP:HALT dry-run queue complete`; driver read the commit-subject sentinel and stopped. PR #1 opened; PR CI green (verify pass + Cloudflare Pages preview pass). main UNTOUCHED (still 72fd660). Both diffs reviewed correct. Fresh-context handoff via committed PROGRESS proven across all 3 iterations. -->
 
@@ -31,22 +31,26 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 
 ## Status
 
+**PHASE C: C.0 ✅ (ea06aee, CI green) · C.1 ✅ (this commit) · C.2a next (attended).** Phase INFRA record (T1–T9, hooks 110→216 matrix, Rung-3 proven): `decisions/0005-autonomy-infra.md` + git history of this file.
+<details><summary>Phase INFRA T1 record (superseded)</summary>
 **PHASE INFRA T1 COMPLETE ✅ — hooks layer live in repo (not yet loaded in a session; T2 verifies wiring).** Test-first: 82-case matrix RED → 4 hooks implemented → GREEN; Mekyle's mid-task additions (bare-force push, PowerShell Remove-Item/aliases, iwr/irm→iex pipes) added RED (26 fail) → pre-bash.mjs extended → 110/110 GREEN. `.claude/settings.json` committed wiring pre-bash + pre-edit + stop-tests (post-edit wired at T3); settings.local.json pruned 55→12 durable patterns. Phase B record: closed 2026-07-08, CI green c9c9c16 (see git history of this file for the fix-pass ledger).
+
+</details>
 
 ## Last action & result
 
-2026-07-10: **T2 live hook verification PASSED — all provocations observed in the real session transcript** (correction to an earlier assumption: hooks in `.claude/settings.json` went live mid-session without a restart; `$CLAUDE_PROJECT_DIR` substitution works on Windows):
+2026-07-11: **C.1 SVG choropleth page + searchable metro index DONE (attended Rung 2), all ACs green with output shown in-session:**
 
-1. `rm -rf /nonexistent-hook-probe` (Bash tool) → `BLOCKED: recursive+force rm/Remove-Item pointed outside the repo`, tool call denied pre-execution.
-2. `git push --force --dry-run origin main` → `BLOCKED: force-push targeting main/master` (probe carried `--dry-run` as a belt so even a hook failure couldn't publish).
-3. `Remove-Item -Recurse -Force C:\nonexistent-hook-probe` via the **PowerShell tool** → same deny (matcher `Bash|PowerShell` wiring confirmed on both tools).
-4. Deliberately red probe test (`tests/stop-probe.test.ts`) + stop attempt → **Stop hook refused the stop**: "Tests failing — fix before stopping (constitution: tests-must-pass)". Probe deleted (T2 artifact, not coverage), suite re-run: 161/161 green.
-5. Organic bonus deny during T1's own AC run: pipe-to-shell pattern in an `echo`'d payload string → `BLOCKED: curl/wget/iwr/irm piped into a shell` (conservative string-matching, known+accepted behavior; hook-testing payloads go via files, not inline strings).
-   T1 (earlier same day): hooks layer test-first, 82 RED → GREEN, +28 Mekyle cases (bare-force push, PS Remove-Item aliases, iwr/irm→iex) 26 RED → 110/110 GREEN, committed ad0dd9e.
+1. `@playwright/test` pinned EXACTLY `1.61.1` (ADR-0005 image match); one-time `npx playwright install chromium` done on this machine; `playwright.config.ts` webServer preview-only (`npm run preview`, `reuseExistingServer: true` — plan amendment); `vitest.config.ts` excludes `tests/e2e/**`.
+2. `npm run build && npx playwright test --reporter=line` → 2 passed, exit=0 (spec: exactly 15 `path[data-region-id]`; click reveals ratio in-page in `#metro-panel`; search filter narrows to 1 and restores 15).
+3. **AC amendment (Mekyle-approved mid-task):** inline-SVG count AC now matches the attribute form `grep -o 'data-region-id="' dist/index.html | wc -l` → 15 — the bare string also appears 3× in legitimate page CSS/JS (hover selector, event delegation), which yielded 18. ROADMAP updated.
+4. `npm test` → 216/216, exit=0 (vitest untouched by e2e specs); `npm run check` → 0 errors; `npx prettier --check .` → clean.
+5. UI protocol: national-view screenshot captured by the spec (`test-results/national-view.png`, gitignored) + second FRESH-CONTEXT pass → **PASS, choropleth visibly colored** (5-bin ramp differentiation confirmed; minor notes: no basemap by design; ratios now displayed `.toFixed(2)` after the pass flagged mixed precision).
+6. Page reads the committed fixture snapshot via `src/lib/data.ts` (single swap point → `data/latest.json` in Phase D, which is gitignored as the LIVE location); the B.4 SVG is inlined verbatim from `data/map/metro-map.svg`; skeleton's non-deterministic `new Date()` stamp removed; index links pre-create `/metro/<slug>/` hrefs via `src/lib/slug.ts` (C.2 reuses).
 
 ## Next action
 
-**C.0 DONE (this commit) — next: C.1 SVG choropleth page + searchable metro index (ATTENDED, Rung 2).** C.1 preconditions: `@playwright/test` devDep pinned EXACTLY `1.61.1` (ADR-0005 image pin); one-time on this machine `npx playwright install chromium`; `playwright.config.ts` webServer preview-only (`command: npm run preview`, `reuseExistingServer: true`); vitest excludes `tests/e2e/**`. Then C.2a (ATTENDED CI-gate widening) → C.2 → C.3 (Rung-3 candidates) → C.3b (ATTENDED). C.4 SUPERVISED SEO-scale runs on the free Google Keyword Planner export at `../Bus_Idea_Project/research/phase-2/gkp-export.csv` (lower-bound rule) — blocked until Mekyle produces that file. Findings 13,15–18,20,21 remain queued for Phase 5.
+**C.1 DONE (this commit) — next: C.2a widen CI attribution gate to recursive (ATTENDED micro-task, ~one line of YAML, Mekyle's credentials).** Exact spec + ACs in ROADMAP § Phase C. After C.2a: C.2 → C.3 (Rung-3 candidates; first overnight launch = ADR-0005 bedtime checklist + watch iteration 1) → C.3b (ATTENDED). C.4 SUPERVISED SEO-scale runs on the free Google Keyword Planner export at `../Bus_Idea_Project/research/phase-2/gkp-export.csv` (lower-bound rule) — blocked until Mekyle produces that file. **C.2 executor note:** `dist/index.html` already contains EXACTLY ONE `data-snapshot-month="2026-05"` (the inlined SVG root attribute) — do NOT add a second; the C.2 AC counts exactly 1 (clarified in ROADMAP at C.1 execution). Findings 13,15–18,20,21 remain queued for Phase 5.
 
 <details><summary>T9 close-out record (2026-07-11) — Phase INFRA done</summary>
 Written: product `decisions/0005-autonomy-infra.md` (full design + pinned tag v1.61.1-noble + bedtime checklist + Sonnet-default cost table); HQ `research/leads.md` Phase 3 CLOSED (TDD Guard KILL, container-use KILL, Chrome DevTools MCP NOT ADOPTED-conditional, @playwright/test ADOPTED); HQ `research/phase-3/notes.md` (V1–V6 evidence + review + integration bugs + cost actuals); CLAUDE.md `npm run check` wording fixed (typecheck + separate prettier --check); ROADMAP T1–T9 checked; HQ PROGRESS.md updated at phase close.

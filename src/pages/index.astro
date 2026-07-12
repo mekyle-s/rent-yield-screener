@@ -1,6 +1,31 @@
 ---
-// Walking skeleton — Task A.1. Replaced by the real map page in Phase C.
-const buildTime = new Date().toISOString();
+// Phase C.1 — SVG choropleth page (metro level) + searchable metro index.
+// Replaces the A.1 walking skeleton (and its non-deterministic build stamp).
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { latest } from "../lib/data";
+import { slugify } from "../lib/slug";
+
+// Committed fixture choropleth (B.4 artifact) inlined verbatim — byte-identical
+// to data/map/metro-map.svg so this page can never drift from the CI-diffed map.
+const svg = readFileSync(
+  resolve(process.cwd(), "data/map/metro-map.svg"),
+  "utf8",
+);
+
+// Lexical sort, not localeCompare (constitution VI — no locale formatting).
+const metros = [...latest.metros].sort((a, b) =>
+  a.regionName < b.regionName ? -1 : 1,
+);
+
+const byId = Object.fromEntries(
+  latest.metros.map((m) => [
+    m.regionId,
+    { name: m.regionName, ratio: m.ratio },
+  ]),
+);
+// Escape "<" so the inlined JSON can never close its own script tag.
+const metroJson = JSON.stringify(byId).replace(/</g, "\\u003c");
 ---
 
 <!doctype html>
@@ -8,17 +33,151 @@ const buildTime = new Date().toISOString();
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Rent-Yield Screener</title>
+    <title>US Metro Price-to-Rent Ratio Map — Rent-Yield Screener</title>
     <meta
       name="description"
-      content="Free ZIP and metro-level price-to-rent ratio map of the US. Screen rental markets by yield — refreshed monthly."
+      content="Free metro-level price-to-rent ratio map of the US. Screen rental markets by yield — refreshed monthly from Zillow Research data."
     />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0 auto;
+        max-width: 60rem;
+        padding: 1rem;
+      }
+      #map svg {
+        width: 100%;
+        height: auto;
+      }
+      #map path[data-region-id]:hover {
+        stroke: #1a73e8;
+        stroke-width: 1.5;
+        cursor: pointer;
+      }
+      #metro-panel {
+        border: 1px solid #ccc;
+        padding: 0.5rem 1rem;
+        margin: 0.5rem 0;
+      }
+      #metro-tooltip {
+        position: fixed;
+        background: #252525;
+        color: #fff;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.85rem;
+        pointer-events: none;
+        border-radius: 3px;
+      }
+      #metro-list {
+        list-style: none;
+        padding: 0;
+      }
+      #metro-list li {
+        padding: 0.15rem 0;
+      }
+    </style>
   </head>
   <body>
     <main>
-      <h1>Rent-Yield Screener</h1>
-      <p>Walking skeleton is alive. The price-to-rent map lands here.</p>
-      <p><small>Build: {buildTime}</small></p>
+      <h1>US Metro Price-to-Rent Ratio Map</h1>
+      <p>
+        Hover a metro for its price-to-rent ratio; click to pin it below.
+        Snapshot month: {latest.meta.snapshotMonth}.
+      </p>
+      <div id="map" set:html={svg} />
+      <p id="metro-panel" hidden></p>
+      <section aria-label="Metro index">
+        <h2>Find a metro</h2>
+        <input
+          id="metro-search"
+          type="search"
+          placeholder="Search metros…"
+          aria-label="Search metros"
+        />
+        <ul id="metro-list">
+          {
+            metros.map((m) => (
+              <li data-name={m.regionName.toLowerCase()}>
+                <a href={`/metro/${slugify(m.regionName)}/`}>{m.regionName}</a>{" "}
+                — price-to-rent ratio {m.ratio.toFixed(2)}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+      <footer>
+        <small>Data Provided by Zillow Group</small>
+      </footer>
     </main>
+    <script
+      type="application/json"
+      id="metro-data"
+      set:html={metroJson}
+      is:inline
+    />
+    <script is:inline>
+      (function () {
+        var data = JSON.parse(
+          document.getElementById("metro-data").textContent,
+        );
+        var map = document.getElementById("map");
+        var panel = document.getElementById("metro-panel");
+        var tip = null;
+
+        function metroFor(target) {
+          var p = target.closest
+            ? target.closest("path[data-region-id]")
+            : null;
+          return p
+            ? { el: p, m: data[p.getAttribute("data-region-id")] }
+            : null;
+        }
+
+        map.addEventListener("click", function (e) {
+          var hit = metroFor(e.target);
+          if (!hit || !hit.m) return;
+          panel.hidden = false;
+          panel.textContent =
+            hit.m.name + " — price-to-rent ratio " + hit.m.ratio.toFixed(2);
+        });
+
+        map.addEventListener("mousemove", function (e) {
+          var hit = metroFor(e.target);
+          if (!hit || !hit.m) {
+            if (tip) {
+              tip.remove();
+              tip = null;
+            }
+            return;
+          }
+          if (!tip) {
+            tip = document.createElement("div");
+            tip.id = "metro-tooltip";
+            document.body.appendChild(tip);
+          }
+          tip.textContent = hit.m.name + " — " + hit.m.ratio.toFixed(2);
+          tip.style.left = e.clientX + 12 + "px";
+          tip.style.top = e.clientY + 12 + "px";
+        });
+        map.addEventListener("mouseleave", function () {
+          if (tip) {
+            tip.remove();
+            tip = null;
+          }
+        });
+
+        var input = document.getElementById("metro-search");
+        var items = Array.prototype.slice.call(
+          document.querySelectorAll("#metro-list li"),
+        );
+        input.addEventListener("input", function () {
+          var q = input.value.trim().toLowerCase();
+          items.forEach(function (li) {
+            li.hidden =
+              q !== "" && li.getAttribute("data-name").indexOf(q) === -1;
+          });
+        });
+      })();
+    </script>
   </body>
 </html>

@@ -26,3 +26,7 @@ Thumbs.db
 # fixture SVG; the live build writes here so it can't clobber it (finding #12)
 /data/map/metro-map.live.svg
 /data/latest.json
+
+# playwright artifacts
+test-results/
+playwright-report/

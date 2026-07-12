@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "etl": "tsx scripts/etl/run.ts",
     "etl:fetch": "tsx scripts/etl/fetch.ts",
     "etl:validate": "tsx scripts/etl/validate.ts",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@playwright/test": "1.61.1",
     "@types/d3-geo": "^3.1.0",
     "@types/node": "^26.1.0",
     "d3-geo": "^3.1.1",
