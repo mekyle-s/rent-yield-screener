@@ -35,10 +35,12 @@ jobs:
       - name: Build
         run: npm run build
       - name: Attribution compliance (constitution V)
-        # No data pages exist yet in the skeleton; guard activates as soon as metro pages ship.
+        # Recursive selection (C.2a): Astro directory output emits dist/metro/<slug>/index.html,
+        # which the old flat glob could never match. Directory-existence guard keeps the step
+        # green until C.2 ships the pages.
         run: |
-          if ls dist/metro/*.html >/dev/null 2>&1; then
-            MISSING=$(grep -L "Data Provided by Zillow Group" dist/metro/*.html || true)
+          if [ -d dist/metro ]; then
+            MISSING=$(grep -rL "Data Provided by Zillow Group" --include="*.html" dist/metro || true)
             if [ -n "$MISSING" ]; then
               echo "::error::Pages missing Zillow attribution:"; echo "$MISSING"; exit 1
             fi
