@@ -114,6 +114,7 @@ These proved the loop MECHANICS (fresh context, ONE task, PROGRESS updated, atom
 - Attribution is CI-asserted, not remembered (constitution V).
 - NEVER pipe verification commands through `tail`/`head` when claiming a pass — it hid 3 local typecheck errors that then failed CI (B.2). Always show the exit code (`${PIPESTATUS[0]}` if piped).
 - ZIP-level Zillow data has legitimate extreme outliers (thin ZORI samples in luxury ZIPs) — hard range asserts on ZIP records will falsely fail live runs.
+- check-seo's positive test must run hermetically against a committed fixture (tests/fixtures/seo-valid/), not dist/ — CI runs tests before build, so a real-build assertion belongs in a dedicated C.3b CI step (build, then check-seo dist/, expect SEO_OK pages=16) that runs after the build step, not inside the unit test suite.
 - Rung-3 loop (ADR-0005): host-side driver is `./scripts/loop/loop.sh claude/<task> <cap>` from Git Bash; run ADR-0005's bedtime checklist first. Anything needing 100% enforcement is a HOOK, not a prompt rule (prompt rules ~70%). Adversarial review + a supervised dry-run catch different bug classes — the review found a credential leak + guard bypasses; the dry-run found Windows-host MSYS mangling the review couldn't. Both are mandatory before trusting an unattended run.
 
 ## Blockers / open questions

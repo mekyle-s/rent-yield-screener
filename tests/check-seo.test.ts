@@ -29,11 +29,9 @@ describe("check-seo CLI (ROADMAP C.3 — non-vacuous negative self-test)", () =>
     expect(r.stderr).toContain("SEO_VIOLATION:");
   });
 
-  it("passes clean on the real build output", () => {
-    // Depends on `npm run build` already having run in this working tree —
-    // mirrors the ROADMAP AC's own sequencing (build, then check-seo dist/).
-    const r = runCli(["dist/"]);
+  it("passes clean on the valid fixture (hermetic, no build required)", () => {
+    const r = runCli(["tests/fixtures/seo-valid/"]);
     expect(r.status, `stdout=${r.stdout} stderr=${r.stderr}`).toBe(0);
-    expect(r.stdout).toContain("SEO_OK pages=16");
+    expect(r.stdout).toContain("SEO_OK pages=2");
   });
 });
