@@ -50,7 +50,7 @@ Re-review fix: c9c9c16 — finding-#5 `--flag=value` support let the csvPaths fi
 
 ## Next action
 
-**C.2a DONE (this commit) — next: C.2 metro page template (Rung-3 loop candidate; if run overnight it is the FIRST real Rung-3 run: ADR-0005 bedtime checklist + watch iteration 1 end-to-end; attended execution also fine).** Exact spec + ACs in ROADMAP § Phase C. After C.2: C.3 (Rung-3 candidate) → C.3b (ATTENDED). C.4 SUPERVISED SEO-scale runs on the free Google Keyword Planner export at `../Bus_Idea_Project/research/phase-2/gkp-export.csv` (lower-bound rule) — blocked until Mekyle produces that file. **C.2 executor note:** `dist/index.html` already contains EXACTLY ONE `data-snapshot-month="2026-05"` (the inlined SVG root attribute) — do NOT add a second; the C.2 AC counts exactly 1 (clarified in ROADMAP at C.1 execution). Findings 13,15–18,20,21 remain queued for Phase 5.
+**C.2a DONE (this commit) — next: C.2 metro page template (Rung-3 loop candidate; if run overnight it is the FIRST real Rung-3 run: ADR-0005 bedtime checklist + watch iteration 1 end-to-end; attended execution also fine).** Exact spec + ACs in ROADMAP § Phase C. After C.2: C.3 (Rung-3 candidate) → C.3b (ATTENDED). C.4 SUPERVISED SEO-scale runs on the Ahrefs Starter export at `../Bus_Idea_Project/research/phase-2/ahrefs-export.csv` (lower-bound rule; instrument re-amended GKP → Ahrefs Starter 2026-07-12, see HQ decision doc) — file produced 2026-07-12 by attended transcription from committed screenshots. **C.2 executor note:** `dist/index.html` already contains EXACTLY ONE `data-snapshot-month="2026-05"` (the inlined SVG root attribute) — do NOT add a second; the C.2 AC counts exactly 1 (clarified in ROADMAP at C.1 execution). Findings 13,15–18,20,21 remain queued for Phase 5.
 
 <details><summary>T9 close-out record (2026-07-11) — Phase INFRA done</summary>
 Written: product `decisions/0005-autonomy-infra.md` (full design + pinned tag v1.61.1-noble + bedtime checklist + Sonnet-default cost table); HQ `research/leads.md` Phase 3 CLOSED (TDD Guard KILL, container-use KILL, Chrome DevTools MCP NOT ADOPTED-conditional, @playwright/test ADOPTED); HQ `research/phase-3/notes.md` (V1–V6 evidence + review + integration bugs + cost actuals); CLAUDE.md `npm run check` wording fixed (typecheck + separate prettier --check); ROADMAP T1–T9 checked; HQ PROGRESS.md updated at phase close.
@@ -90,7 +90,7 @@ These proved the loop MECHANICS (fresh context, ONE task, PROGRESS updated, atom
 ## Blockers / open questions
 
 - ~~gh CLI not installed~~ RESOLVED: gh 2.96.0 present (verified 2026-07-07).
-- Task C.4 (SEO scale) blocked on the free Google Keyword Planner export at `../Bus_Idea_Project/research/phase-2/gkp-export.csv` → judged by the pre-registered lower-bound rule.
+- ~~Task C.4 (SEO scale) blocked on the keyword export~~ RESOLVED 2026-07-12: Ahrefs Starter export at `../Bus_Idea_Project/research/phase-2/ahrefs-export.csv` exists (GKP → Ahrefs amendment; attended transcription from committed screenshots) → judged by the pre-registered lower-bound rule.
 - B.4 crosswalk source must be stated to Mekyle before building (approval note 4).
 
 ## Loop control
