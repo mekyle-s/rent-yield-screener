@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { latest } from "../lib/data";
 import { slugify } from "../lib/slug";
+import { jsonLd } from "../lib/jsonld";
 
 // Committed fixture choropleth (B.4 artifact) inlined verbatim — byte-identical
 // to data/map/metro-map.svg so this page can never drift from the CI-diffed map.
@@ -26,6 +27,18 @@ const byId = Object.fromEntries(
 );
 // Escape "<" so the inlined JSON can never close its own script tag.
 const metroJson = JSON.stringify(byId).replace(/</g, "\\u003c");
+
+const title = "US Metro Price-to-Rent Ratio Map — Rent-Yield Screener";
+const description =
+  "Free metro-level price-to-rent ratio map of the US. Screen rental markets by yield — refreshed monthly from Zillow Research data.";
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const structuredData = jsonLd({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: title,
+  url: canonical,
+  description,
+});
 ---
 
 <!doctype html>
@@ -33,11 +46,12 @@ const metroJson = JSON.stringify(byId).replace(/</g, "\\u003c");
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>US Metro Price-to-Rent Ratio Map — Rent-Yield Screener</title>
-    <meta
-      name="description"
-      content="Free metro-level price-to-rent ratio map of the US. Screen rental markets by yield — refreshed monthly from Zillow Research data."
-    />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <script type="application/ld+json" set:html={structuredData} is:inline />
     <style>
       body {
         font-family: system-ui, sans-serif;
