@@ -1,0 +1,96 @@
+---
+// Phase C.2 — one page per fixture metro, Astro directory output
+// (dist/metro/<slug>/index.html — clean extensionless URLs, SEO-first).
+import { latest } from "../../lib/data";
+import { slugify } from "../../lib/slug";
+import { formatInt } from "../../lib/format";
+import type { RegionRecord } from "../../lib/data";
+
+export function getStaticPaths() {
+  return latest.metros.map((metro) => ({
+    params: { slug: slugify(metro.regionName) },
+    props: { metro },
+  }));
+}
+
+interface Props {
+  metro: RegionRecord;
+}
+
+const { metro } = Astro.props;
+
+// Rank among the fixture set by price-to-rent ratio (lower ratio = cheaper
+// purchase price relative to rent = better rental yield). Cross-sectional,
+// derived entirely from the committed snapshot — no fabricated trend data.
+const byRatio = [...latest.metros].sort((a, b) => a.ratio - b.ratio);
+const rank = byRatio.findIndex((m) => m.regionId === metro.regionId) + 1;
+const total = byRatio.length;
+
+const title = `${metro.regionName} Price-to-Rent Ratio — Rent-Yield Screener`;
+const description = `${metro.regionName} price-to-rent ratio is ${metro.ratio.toFixed(2)} as of ${metro.month} — median home value $${formatInt(metro.zhvi)} vs. median rent $${formatInt(metro.zori)}/mo. Free metro rental-yield data from Zillow Research.`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0 auto;
+        max-width: 40rem;
+        padding: 1rem;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      td,
+      th {
+        text-align: left;
+        padding: 0.35rem 0.5rem;
+        border-bottom: 1px solid #ddd;
+      }
+      .ratio {
+        font-size: 2rem;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p><a href="/">← All metros</a></p>
+      <h1>{metro.regionName}</h1>
+      <p class="ratio">Price-to-rent ratio: {metro.ratio.toFixed(2)}</p>
+      <p>
+        Rank {rank} of {total} fixture metros (lower ratio = better rental yield).
+      </p>
+      <table>
+        <tbody>
+          <tr>
+            <th scope="row">Median home value (ZHVI)</th>
+            <td>${formatInt(metro.zhvi)}</td>
+          </tr>
+          <tr>
+            <th scope="row">Median rent (ZORI, monthly)</th>
+            <td>${formatInt(metro.zori)}/mo</td>
+          </tr>
+          <tr>
+            <th scope="row">Snapshot month</th>
+            <td>{metro.month}</td>
+          </tr>
+          <tr>
+            <th scope="row">State</th>
+            <td>{metro.stateName}</td>
+          </tr>
+        </tbody>
+      </table>
+      <footer>
+        <small>Data Provided by Zillow Group</small>
+      </footer>
+    </main>
+  </body>
+</html>
