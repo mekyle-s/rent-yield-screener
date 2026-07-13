@@ -4,6 +4,7 @@
 import { latest } from "../../lib/data";
 import { slugify } from "../../lib/slug";
 import { formatInt } from "../../lib/format";
+import { jsonLd } from "../../lib/jsonld";
 import type { RegionRecord } from "../../lib/data";
 
 export function getStaticPaths() {
@@ -28,6 +29,14 @@ const total = byRatio.length;
 
 const title = `${metro.regionName} Price-to-Rent Ratio — Rent-Yield Screener`;
 const description = `${metro.regionName} price-to-rent ratio is ${metro.ratio.toFixed(2)} as of ${metro.month} — median home value $${formatInt(metro.zhvi)} vs. median rent $${formatInt(metro.zori)}/mo. Free metro rental-yield data from Zillow Research.`;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const structuredData = jsonLd({
+  "@context": "https://schema.org",
+  "@type": "Place",
+  name: metro.regionName,
+  url: canonical,
+  description,
+});
 ---
 
 <!doctype html>
@@ -37,6 +46,10 @@ const description = `${metro.regionName} price-to-rent ratio is ${metro.ratio.to
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <script type="application/ld+json" set:html={structuredData} is:inline />
     <style>
       body {
         font-family: system-ui, sans-serif;

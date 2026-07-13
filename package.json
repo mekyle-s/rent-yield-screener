@@ -17,6 +17,7 @@
     "map:verify": "tsx scripts/map/verify.ts"
   },
   "dependencies": {
+    "@astrojs/sitemap": "3.7.3",
     "astro": "^7.0.6"
   },
   "devDependencies": {
