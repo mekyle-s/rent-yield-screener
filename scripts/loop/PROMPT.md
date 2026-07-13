@@ -53,3 +53,4 @@ ANY of these holds:
 - No pushes to main. No force-push anywhere. No `--no-verify`.
 - Never edit `.claude/**`, `scripts/loop/**`, or `.github/**`.
 - Tests must pass and the tree must be clean before you can stop.
+- ROADMAP.md is read-only for loops: never edit it, not even checkboxes. PROGRESS.md is your only status surface.
