@@ -34,6 +34,7 @@ jobs:
           git diff --exit-code data/map/metro-map.svg
       - name: Build
         run: npm run build
+      - run: npx tsx scripts/check-seo.ts dist/
       - name: Attribution compliance (constitution V)
         # Recursive selection (C.2a): Astro directory output emits dist/metro/<slug>/index.html,
         # which the old flat glob could never match. Directory-existence guard keeps the step
