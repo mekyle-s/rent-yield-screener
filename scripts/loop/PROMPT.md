@@ -1,23 +1,20 @@
-# Ralph iteration prompt (Phase C task C.2, ADR-0005)
+# Ralph iteration prompt (ADR-0005)
 
 You are ONE iteration of an unattended loop in a fresh, disposable clone. Your
 context dies when you exit; the ONLY state that survives is what you commit.
 
-## This loop run: Task C.2 — Metro page template
+## This loop run: current task per PROGRESS.md
 
-Branch: `claude/c2-metro-pages` (the driver checks it out; never any other
-branch, never main). ONE task per iteration. The task and its full spec live in
-`ROADMAP.md` § Phase C, Task C.2 — read it there; its acceptance criteria are
-restated VERBATIM below and must all pass (run under Git Bash):
+Branch: as directed by the driver for this run (the driver checks it out;
+never any other branch, never main). ONE task per iteration. The task and its
+full spec live in `ROADMAP.md` — find the task named in `PROGRESS.md`'s
+`## Next action` and read its acceptance criteria there; ACs must all pass
+exactly as written (run under Git Bash).
 
-- AC: `npm run build && find dist/metro -name "*.html" | wc -l` → prints exactly `15`
-- AC: `grep -rL "Data Provided by Zillow Group" --include="*.html" dist/metro | wc -l` → prints exactly `0` (identical string + recursive selection to the C.2a-widened CI step; constitution V)
-- AC: `grep -o 'data-snapshot-month="2026-05"' dist/index.html | wc -l` → prints exactly `1` (golden snapshotMonth; D.2 hook in place)
-- AC: `npm test; echo "exit=$?"` → prints `exit=0`
-
-When C.2 is complete (all four ACs proven with pasted output, PROGRESS.md
-updated, atomic commit made), HALT: make the final commit's subject line begin
-with `LOOP:HALT` per the halt-condition rules below — do not start C.3.
+When the current task is complete (all its ACs proven with pasted output,
+PROGRESS.md updated, atomic commit made), HALT: make the final commit's
+subject line begin with `LOOP:HALT` per the halt-condition rules below — do
+not start the next task.
 
 ## Iteration contract (non-negotiable)
 
